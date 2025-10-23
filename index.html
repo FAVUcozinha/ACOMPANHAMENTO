@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Acompanhamento de Pedidos</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; color: #333; padding: 20px; }
+        .container { max-width: 1200px; margin: auto; }
+        h1 { color: #7FB1C8; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background-color: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; font-size: 14px; }
+        th { background-color: #7FB1C8; color: white; }
+        tr:hover { background-color: #f9f9f9; }
+        .status-aberto { color: #E60000; font-weight: bold; }
+        .status-agendado { color: #E09F41; font-weight: bold; }
+        .status-entregue { color: green; font-weight: bold; }
+        select, button { padding: 8px; border-radius: 5px; border: 1px solid #ccc; font-size: 14px; }
+        button { background-color: #E09F41; color: white; cursor: pointer; border: none; margin-left: 5px; }
+        button:hover { background-color: #c98e3b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Painel de Gerenciamento de Pedidos</h1>
+        <p>Pedidos mais recentes no topo. Mostrando apenas status "Aberto", "Agendado", "Em Produção" e "Pronto para Envio".</p>
+        <button onclick="carregarPedidos()">Atualizar Lista</button>
+        <div id="lista-pedidos">Carregando pedidos...</div>
+    </div>
+
+    <script>
+        // 🚨🚨 SUBSTITUA ESTA URL PELA SUA URL DO GOOGLE APPS SCRIPT /exec (Passo 1.5) 🚨🚨
+        const APPS_SCRIPT_URL = "SUA_URL_DO_APPS_SCRIPT_AQUI"; 
+        
+        // Define as opções de status
+        const STATUS_OPTIONS = ["Aberto", "Agendado", "Em Produção", "Pronto para Envio", "Entregue", "Cancelado"];
+
+        // Mapeamento de Status para classes de estilo
+        const STATUS_CLASSES = {
+            "Aberto": "status-aberto",
+            "Agendado": "status-agendado",
+            "Em Produção": "",
+            "Pronto para Envio": "",
+            "Entregue": "status-entregue",
+            "Cancelado": "status-cancelado"
+        };
+        
+        // Status que devem ser exibidos no painel (em andamento)
+        const STATUS_EM_ANDAMENTO = ["Aberto", "Agendado", "Em Produção", "Pronto para Envio"];
+
+
+        async function carregarPedidos() {
+            const container = document.getElementById('lista-pedidos');
+            container.innerHTML = '<table><thead><tr><th>ID Pedido</th><th>Status</th><th>Cliente / Data / Horário</th><th>Total</th><th>Resumo</th><th>Ação</th></tr></thead><tbody></tbody></table>';
+            const tbody = container.querySelector('tbody');
+
+            try {
+                // Requisição para ler os pedidos (GET com a action=read)
+                const response = await fetch(`${APPS_SCRIPT_URL}?action=read`);
+                const data = await response.json();
+
+                if (!data.success) {
+                    tbody.innerHTML = `<tr><td colspan="6">Erro ao carregar pedidos: ${data.message}</td></tr>`;
+                    return;
+                }
+
+                // Filtra e inverte a ordem para mostrar os mais novos (maior número de linha) primeiro
+                const pedidosEmAndamento = data.pedidos
+                    .filter(p => STATUS_EM_ANDAMENTO.includes(p.Status))
+                    .reverse(); 
+
+                if (pedidosEmAndamento.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6">Nenhum pedido em aberto.</td></tr>`;
+                    return;
+                }
+
+                pedidosEmAndamento.forEach(pedido => { 
+                    const id = pedido.ID_do_Pedido || 'N/A';
+                    const statusAtual = pedido.Status || 'Aberto';
+                    const dataObj = new Date(pedido.Carimbo_de_data/hora);
+                    const dataHoraStr = `${dataObj.toLocaleDateString()} ${pedido.Horário_Entrega || '---'}`;
+                    const resumo = pedido.Resumo_dos_Itens || 'Sem Resumo';
+                    
+                    const resumoSimplificado = resumo.length > 50 ? resumo.substring(0, 50) + '...' : resumo;
+
+                    let row = document.createElement('tr');
+                    row.id = `pedido-${id}`;
+                    row.innerHTML = `
+                        <td>${id}</td>
+                        <td><span id="status-${id}" class="${STATUS_CLASSES[statusAtual]}">${statusAtual}</span></td>
+                        <td>
+                            <strong>${pedido.Nome_do_Cliente || 'N/A'}</strong><br>
+                            ${dataHoraStr}
+                        </td>
+                        <td>R$ ${pedido.Total_Final || '0,00'}</td>
+                        <td title="${resumo}">${resumoSimplificado}</td>
+                        <td>
+                            <select id="select-status-${id}" data-id="${id}">
+                                ${STATUS_OPTIONS.map(status => `
+                                    <option value="${status}" ${status === statusAtual ? 'selected' : ''}>
+                                        ${status}
+                                    </option>
+                                `).join('')}
+                            </select>
+                            <button onclick="atualizarStatusPedido('${id}')">Salvar</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                
+            } catch (error) {
+                console.error("Erro na comunicação com a API:", error);
+                container.innerHTML = '<table><tr><td>Erro de rede. Verifique a URL do Apps Script.</td></tr></table>';
+            }
+        }
+        
+        async function atualizarStatusPedido(idPedido) {
+            const select = document.getElementById(`select-status-${idPedido}`);
+            const novoStatus = select.value;
+            const statusDisplay = document.getElementById(`status-${idPedido}`);
+            const botao = select.nextElementSibling;
+            
+            const statusAnterior = statusDisplay.textContent;
+            statusDisplay.textContent = 'Aguarde...';
+            statusDisplay.className = ''; // Limpa a classe para o estado de espera
+            botao.disabled = true;
+
+            try {
+                // Requisição para atualizar o status (POST com a action=updateStatus)
+                const formData = new FormData();
+                formData.append('action', 'updateStatus');
+                formData.append('id', idPedido);
+                formData.append('status', novoStatus);
+
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    body: formData 
+                });
+                
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(`Status do Pedido ${idPedido} atualizado para ${novoStatus}.`);
+                    statusDisplay.textContent = novoStatus;
+                    statusDisplay.className = STATUS_CLASSES[novoStatus]; // Aplica nova classe
+                    
+                    // Se o status final não for mais de "em andamento", remove da visualização
+                    if (!STATUS_EM_ANDAMENTO.includes(novoStatus)) {
+                        document.getElementById(`pedido-${idPedido}`).remove();
+                    }
+                } else {
+                    alert(`Erro ao atualizar o status: ${data.message}`);
+                    statusDisplay.textContent = statusAnterior;
+                    statusDisplay.className = STATUS_CLASSES[statusAnterior]; 
+                }
+            } catch (error) {
+                console.error("Erro de rede:", error);
+                alert("Erro de rede ao atualizar o status.");
+                statusDisplay.textContent = statusAnterior;
+                statusDisplay.className = STATUS_CLASSES[statusAnterior]; 
+            } finally {
+                botao.disabled = false;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', carregarPedidos);
+    </script>
+</body>
+</html>

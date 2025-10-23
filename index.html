@@ -8,13 +8,19 @@
         body { font-family: Arial, sans-serif; background-color: #f4f4f4; color: #333; padding: 20px; }
         .container { max-width: 1200px; margin: auto; }
         h1 { color: #7FB1C8; }
+        /* Estilo da Tabela */
         table { width: 100%; border-collapse: collapse; margin-top: 20px; background-color: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; font-size: 14px; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; font-size: 14px; vertical-align: top; }
         th { background-color: #7FB1C8; color: white; }
         tr:hover { background-color: #f9f9f9; }
+        
+        /* Estilos dos Status */
         .status-aberto { color: #E60000; font-weight: bold; }
         .status-agendado { color: #E09F41; font-weight: bold; }
         .status-entregue { color: green; font-weight: bold; }
+        .status-cancelado { color: #888; font-weight: bold; text-decoration: line-through; } 
+        
+        /* Estilos de Ação */
         select, button { padding: 8px; border-radius: 5px; border: 1px solid #ccc; font-size: 14px; }
         button { background-color: #E09F41; color: white; cursor: pointer; border: none; margin-left: 5px; }
         button:hover { background-color: #c98e3b; }
@@ -23,14 +29,14 @@
 <body>
     <div class="container">
         <h1>Painel de Gerenciamento de Pedidos</h1>
-        <p>Pedidos mais recentes no topo. Mostrando apenas status "Aberto", "Agendado", "Em Produção" e "Pronto para Envio".</p>
+        <p>Pedidos mais recentes no topo. Mostrando status "Aberto", "Agendado", "Em Produção" e "Pronto para Envio".</p>
         <button onclick="carregarPedidos()">Atualizar Lista</button>
         <div id="lista-pedidos">Carregando pedidos...</div>
     </div>
 
     <script>
-        // 🚨🚨 SUBSTITUA ESTA URL PELA SUA URL DO GOOGLE APPS SCRIPT /exec (Passo 1.5) 🚨🚨
-        const APPS_SCRIPT_URL = "hhttps://script.google.com/macros/s/AKfycbzPg0luc_LKOhkOLrefXv202qDAHMHFHO_19WF4dtXoc_20MwykJzNI5IRuYlq0Rr5s/exec"; 
+        // 🚨🚨 URL DO APPS SCRIPT (A mesma que você usou no site de pedidos) 🚨🚨
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzPg0luc_LKOhkOLrefXv202qDAHMHFHO_19WF4dtXoc_20MwykJzNI5IRuYlq0Rr5s/exec"; 
         
         // Define as opções de status
         const STATUS_OPTIONS = ["Aberto", "Agendado", "Em Produção", "Pronto para Envio", "Entregue", "Cancelado"];
@@ -53,6 +59,7 @@
             const container = document.getElementById('lista-pedidos');
             container.innerHTML = '<table><thead><tr><th>ID Pedido</th><th>Status</th><th>Cliente / Data / Horário</th><th>Total</th><th>Resumo</th><th>Ação</th></tr></thead><tbody></tbody></table>';
             const tbody = container.querySelector('tbody');
+            container.classList.add('loading');
 
             try {
                 // Requisição para ler os pedidos (GET com a action=read)
@@ -60,11 +67,11 @@
                 const data = await response.json();
 
                 if (!data.success) {
-                    tbody.innerHTML = `<tr><td colspan="6">Erro ao carregar pedidos: ${data.message}</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="6">Erro ao carregar pedidos: ${data.message || 'Resposta inválida da API.'}</td></tr>`;
                     return;
                 }
 
-                // Filtra e inverte a ordem para mostrar os mais novos (maior número de linha) primeiro
+                // Filtra e inverte a ordem para mostrar os mais novos primeiro
                 const pedidosEmAndamento = data.pedidos
                     .filter(p => STATUS_EM_ANDAMENTO.includes(p.Status))
                     .reverse(); 
@@ -73,15 +80,20 @@
                     tbody.innerHTML = `<tr><td colspan="6">Nenhum pedido em aberto.</td></tr>`;
                     return;
                 }
+                
+                const MAX_RESUMO_LENGTH = 100;
 
                 pedidosEmAndamento.forEach(pedido => { 
+                    // CHAVES LENDO OS NOMES FORMATADOS PELO APPS SCRIPT (com underscore)
                     const id = pedido.ID_do_Pedido || 'N/A';
                     const statusAtual = pedido.Status || 'Aberto';
-                    const dataObj = new Date(pedido.Carimbo_de_data/hora);
-                    const dataHoraStr = `${dataObj.toLocaleDateString()} ${pedido.Horário_Entrega || '---'}`;
-                    const resumo = pedido.Resumo_dos_Itens || 'Sem Resumo';
+                    const resumo = pedido.Resumo_dos_Itens || 'Sem Resumo'; 
+                    const nomeCliente = pedido.Nome_do_Cliente || 'N/A';
+                    const dataEntrega = pedido.Data_da_Entrega || '---';
+                    const horarioEntrega = pedido.Horário_da_Entrega || '---';
+                    const totalFinal = pedido.Total_Final || '0,00';
                     
-                    const resumoSimplificado = resumo.length > 50 ? resumo.substring(0, 50) + '...' : resumo;
+                    const resumoSimplificado = resumo.length > MAX_RESUMO_LENGTH ? resumo.substring(0, MAX_RESUMO_LENGTH) + '...' : resumo;
 
                     let row = document.createElement('tr');
                     row.id = `pedido-${id}`;
@@ -89,10 +101,11 @@
                         <td>${id}</td>
                         <td><span id="status-${id}" class="${STATUS_CLASSES[statusAtual]}">${statusAtual}</span></td>
                         <td>
-                            <strong>${pedido.Nome_do_Cliente || 'N/A'}</strong><br>
-                            ${dataHoraStr}
+                            <strong>${nomeCliente}</strong><br>
+                            Data: ${dataEntrega}<br>
+                            Horário: ${horarioEntrega}
                         </td>
-                        <td>R$ ${pedido.Total_Final || '0,00'}</td>
+                        <td>R$ ${totalFinal}</td>
                         <td title="${resumo}">${resumoSimplificado}</td>
                         <td>
                             <select id="select-status-${id}" data-id="${id}">
@@ -110,7 +123,9 @@
                 
             } catch (error) {
                 console.error("Erro na comunicação com a API:", error);
-                container.innerHTML = '<table><tr><td>Erro de rede. Verifique a URL do Apps Script.</td></tr></table>';
+                container.innerHTML = '<table><tr><td colspan="6">Erro de rede. Verifique a URL e a Implantação do Apps Script.</td></tr></table>';
+            } finally {
+                container.classList.remove('loading');
             }
         }
         
@@ -125,37 +140,45 @@
             statusDisplay.className = ''; // Limpa a classe para o estado de espera
             botao.disabled = true;
 
+            // Prepara os dados para o POST
+            const formData = new FormData();
+            formData.append('action', 'updateStatus');
+            formData.append('id', idPedido);
+            formData.append('status', novoStatus);
+            
+            // CORREÇÃO: Formato de envio para Apps Script (URLSearchParams)
+            const urlEncodedData = new URLSearchParams(formData);
+
             try {
                 // Requisição para atualizar o status (POST com a action=updateStatus)
-                const formData = new FormData();
-                formData.append('action', 'updateStatus');
-                formData.append('id', idPedido);
-                formData.append('status', novoStatus);
-
                 const response = await fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
-                    body: formData 
+                    body: urlEncodedData 
                 });
                 
                 const data = await response.json();
 
                 if (data.success) {
                     alert(`Status do Pedido ${idPedido} atualizado para ${novoStatus}.`);
-                    statusDisplay.textContent = novoStatus;
-                    statusDisplay.className = STATUS_CLASSES[novoStatus]; // Aplica nova classe
                     
                     // Se o status final não for mais de "em andamento", remove da visualização
                     if (!STATUS_EM_ANDAMENTO.includes(novoStatus)) {
                         document.getElementById(`pedido-${idPedido}`).remove();
+                    } else {
+                        // Atualiza a visualização na linha
+                        statusDisplay.textContent = novoStatus;
+                        statusDisplay.className = STATUS_CLASSES[novoStatus]; 
                     }
                 } else {
                     alert(`Erro ao atualizar o status: ${data.message}`);
+                    // Reverte o estado visual em caso de erro
                     statusDisplay.textContent = statusAnterior;
                     statusDisplay.className = STATUS_CLASSES[statusAnterior]; 
                 }
             } catch (error) {
                 console.error("Erro de rede:", error);
                 alert("Erro de rede ao atualizar o status.");
+                // Reverte o estado visual em caso de erro
                 statusDisplay.textContent = statusAnterior;
                 statusDisplay.className = STATUS_CLASSES[statusAnterior]; 
             } finally {

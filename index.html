@@ -3,61 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Acompanhamento de Pedidos</title>
+    <title>Painel de Gerenciamento de Pedidos</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f4f4; color: #333; padding: 20px; }
-        .container { max-width: 1200px; margin: auto; }
+        .container { max-width: 1400px; margin: auto; }
         h1 { color: #7FB1C8; }
+        
         /* Estilo da Tabela */
         table { width: 100%; border-collapse: collapse; margin-top: 20px; background-color: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; font-size: 14px; vertical-align: top; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; font-size: 14px; vertical-align: middle; }
         th { background-color: #7FB1C8; color: white; }
         tr:hover { background-color: #f9f9f9; }
         
         /* Estilos dos Status */
-        .status-aberto { color: #E60000; font-weight: bold; }
-        .status-agendado { color: #E09F41; font-weight: bold; }
-        .status-entregue { color: green; font-weight: bold; }
-        .status-cancelado { color: #888; font-weight: bold; text-decoration: line-through; } 
+        .status-orcado { color: #888; font-weight: bold; }
+        .status-pago { color: green; font-weight: bold; background-color: #e6ffe6; border-radius: 4px; padding: 2px 5px; }
+        .status-50 { color: #E09F41; font-weight: bold; background-color: #fff8e6; border-radius: 4px; padding: 2px 5px; }
+        .status-pendente { color: #E60000; font-weight: bold; background-color: #ffe6e6; border-radius: 4px; padding: 2px 5px; }
+        .status-entregue { color: #004d00; font-weight: bold; text-decoration: line-through; } 
         
         /* Estilos de Ação */
-        select, button { padding: 8px; border-radius: 5px; border: 1px solid #ccc; font-size: 14px; }
-        button { background-color: #E09F41; color: white; cursor: pointer; border: none; margin-left: 5px; }
+        select, button { padding: 8px; border-radius: 5px; border: 1px solid #ccc; font-size: 14px; margin: 2px 0; }
+        button { background-color: #E09F41; color: white; cursor: pointer; border: none; margin-left: 5px; transition: background-color 0.3s; }
         button:hover { background-color: #c98e3b; }
+        .edit-button { background-color: #7FB1C8; }
+        .edit-button:hover { background-color: #6a9bb0; }
+        
+        /* Estilo do Modal (para Edição) */
+        .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+        .modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 500px; border-radius: 10px; box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); animation-name: animatetop; animation-duration: 0.4s }
+        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
+        .close:hover, .close:focus { color: #000; text-decoration: none; cursor: pointer; }
+        .modal-content input, .modal-content textarea { width: 100%; padding: 10px; margin: 5px 0 15px 0; display: inline-block; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        
+        @keyframes animatetop { from {top: -300px; opacity: 0} to {top: 0; opacity: 1} }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Painel de Gerenciamento de Pedidos</h1>
-        <p>Pedidos mais recentes no topo. Mostrando status "Aberto", "Agendado", "Em Produção" e "Pronto para Envio".</p>
-        <button onclick="carregarPedidos()">Atualizar Lista</button>
+        <p>Pedidos em andamento no topo. Atualização automática a cada 5 minutos.</p>
+        <button onclick="carregarPedidos()">Atualizar Lista Manualmente</button>
         <div id="lista-pedidos">Carregando pedidos...</div>
+    </div>
+
+    <div id="modal-edicao" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="fecharModalEdicao()">&times;</span>
+        <h2>Editar Pedido <span id="modal-id-pedido"></span></h2>
+        <form id="form-edicao">
+            <input type="hidden" id="edit-id-pedido">
+            
+            <label for="edit-cliente">Nome do Cliente:</label>
+            <input type="text" id="edit-cliente" required>
+
+            <label for="edit-data">Data da Entrega:</label>
+            <input type="date" id="edit-data">
+            
+            <label for="edit-horario">Horário da Entrega:</label>
+            <input type="time" id="edit-horario">
+            
+            <label for="edit-total">Total Final (R$):</label>
+            <input type="text" id="edit-total" pattern="[0-9.,]+" title="Use apenas números, vírgula ou ponto." required>
+
+            <label for="edit-resumo">Resumo dos Itens:</label>
+            <textarea id="edit-resumo" rows="4"></textarea>
+
+            <button type="button" onclick="salvarEdicao()">Salvar Edições</button>
+        </form>
+      </div>
     </div>
 
     <script>
         // 🚨🚨 URL DO APPS SCRIPT (A mesma que você usou no site de pedidos) 🚨🚨
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzPg0luc_LKOhkOLrefXv202qDAHMHFHO_19WF4dtXoc_20MwykJzNI5IRuYlq0Rr5s/exec"; 
         
-        // Define as opções de status
-        const STATUS_OPTIONS = ["Aberto", "Agendado", "Em Produção", "Pronto para Envio", "Entregue", "Cancelado"];
+        // Define as novas opções de status
+        const STATUS_OPTIONS = [
+            "Orçado", 
+            "Agendado - Pago", 
+            "Agendado - 50%", 
+            "Agendado - Pendente", 
+            "Entregue", 
+            "Cancelado"
+        ];
 
         // Mapeamento de Status para classes de estilo
         const STATUS_CLASSES = {
-            "Aberto": "status-aberto",
-            "Agendado": "status-agendado",
-            "Em Produção": "",
-            "Pronto para Envio": "",
+            "Orçado": "status-orcado",
+            "Agendado - Pago": "status-pago",
+            "Agendado - 50%": "status-50",
+            "Agendado - Pendente": "status-pendente",
             "Entregue": "status-entregue",
             "Cancelado": "status-cancelado"
         };
         
         // Status que devem ser exibidos no painel (em andamento)
-        const STATUS_EM_ANDAMENTO = ["Aberto", "Agendado", "Em Produção", "Pronto para Envio"];
+        const STATUS_EM_ANDAMENTO = [
+            "Orçado", 
+            "Agendado - Pago", 
+            "Agendado - 50%", 
+            "Agendado - Pendente"
+        ];
 
 
         async function carregarPedidos() {
             const container = document.getElementById('lista-pedidos');
-            container.innerHTML = '<table><thead><tr><th>ID Pedido</th><th>Status</th><th>Cliente / Data / Horário</th><th>Total</th><th>Resumo</th><th>Ação</th></tr></thead><tbody></tbody></table>';
+            container.innerHTML = '<table><thead><tr><th>ID Pedido</th><th>Status</th><th>Cliente / Data / Horário</th><th>Total</th><th>Resumo</th><th>Ações</th></tr></thead><tbody></tbody></table>';
             const tbody = container.querySelector('tbody');
             container.classList.add('loading');
 
@@ -71,7 +123,7 @@
                     return;
                 }
 
-                // Filtra e inverte a ordem para mostrar os mais novos primeiro
+                // Filtra e inverte a ordem para mostrar os mais novos primeiro (presumindo que o Apps Script retorna em ordem de criação)
                 const pedidosEmAndamento = data.pedidos
                     .filter(p => STATUS_EM_ANDAMENTO.includes(p.Status))
                     .reverse(); 
@@ -86,20 +138,33 @@
                 pedidosEmAndamento.forEach(pedido => { 
                     // CHAVES LENDO OS NOMES FORMATADOS PELO APPS SCRIPT (com underscore)
                     const id = pedido.ID_do_Pedido || 'N/A';
-                    const statusAtual = pedido.Status || 'Aberto';
+                    const statusAtual = pedido.Status || 'Orçado';
                     const resumo = pedido.Resumo_dos_Itens || 'Sem Resumo'; 
                     const nomeCliente = pedido.Nome_do_Cliente || 'N/A';
-                    
-                    // CORRIGIDO: Lendo os campos como string da Planilha
                     const dataEntrega = pedido.Data_da_Entrega || '---';
                     const horarioEntrega = pedido.Horário_da_Entrega || '---';
-                    
                     const totalFinal = pedido.Total_Final || '0,00';
                     
                     const resumoSimplificado = resumo.length > MAX_RESUMO_LENGTH ? resumo.substring(0, MAX_RESUMO_LENGTH) + '...' : resumo;
+                    
+                    // Converte a data (ex: dd/mm/aaaa) para o formato esperado pelo input type="date" (yyyy-mm-dd)
+                    const dataParaInput = dataEntrega !== '---' 
+                        ? dataEntrega.split('/').reverse().join('-') 
+                        : '';
+
 
                     let row = document.createElement('tr');
                     row.id = `pedido-${id}`;
+                    // Armazena todos os dados do pedido na linha para facilitar a edição
+                    row.dataset.pedido = JSON.stringify({
+                        id: id,
+                        cliente: nomeCliente,
+                        data: dataParaInput, // Formato yyyy-mm-dd
+                        horario: horarioEntrega,
+                        total: totalFinal,
+                        resumo: resumo
+                    });
+
                     row.innerHTML = `
                         <td>${id}</td>
                         <td><span id="status-${id}" class="${STATUS_CLASSES[statusAtual]}">${statusAtual}</span></td>
@@ -118,15 +183,16 @@
                                     </option>
                                 `).join('')}
                             </select>
-                            <button onclick="atualizarStatusPedido('${id}')">Salvar</button>
+                            <button onclick="atualizarStatusPedido('${id}')">Salvar Status</button>
+                            <button class="edit-button" onclick="abrirModalEdicao('${id}')">Editar</button>
                         </td>
                     `;
                     tbody.appendChild(row);
                 });
                 
             } catch (error) {
-                console.error("Erro na comunicação com a API (Painel.html):", error);
-                tbody.innerHTML = '<tr><td colspan="6">Erro de rede. Verifique a URL e a Implantação do Apps Script.</td></tr>';
+                console.error("Erro na comunicação com a API:", error);
+                container.innerHTML = '<table><tr><td colspan="6">Erro de rede. Verifique a URL e a Implantação do Apps Script.</td></tr></table>';
             } finally {
                 container.classList.remove('loading');
             }
@@ -136,24 +202,19 @@
             const select = document.getElementById(`select-status-${idPedido}`);
             const novoStatus = select.value;
             const statusDisplay = document.getElementById(`status-${idPedido}`);
-            const botao = select.nextElementSibling;
+            const botao = select.nextElementSibling; // O botão "Salvar Status"
             
             const statusAnterior = statusDisplay.textContent;
             statusDisplay.textContent = 'Aguarde...';
             statusDisplay.className = ''; // Limpa a classe para o estado de espera
             botao.disabled = true;
 
-            // Prepara os dados para o POST
-            const formData = new FormData();
-            formData.append('action', 'updateStatus');
-            formData.append('id', idPedido);
-            formData.append('status', novoStatus);
+            const urlEncodedData = new URLSearchParams();
+            urlEncodedData.append('action', 'updateStatus');
+            urlEncodedData.append('id', idPedido);
+            urlEncodedData.append('status', novoStatus);
             
-            // CORREÇÃO: Formato de envio para Apps Script (URLSearchParams)
-            const urlEncodedData = new URLSearchParams(formData);
-
             try {
-                // Requisição para atualizar o status (POST com a action=updateStatus)
                 const response = await fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
                     body: urlEncodedData 
@@ -164,32 +225,106 @@
                 if (data.success) {
                     alert(`Status do Pedido ${idPedido} atualizado para ${novoStatus}.`);
                     
-                    // Se o status final não for mais de "em andamento", remove da visualização
                     if (!STATUS_EM_ANDAMENTO.includes(novoStatus)) {
                         document.getElementById(`pedido-${idPedido}`).remove();
                     } else {
-                        // Atualiza a visualização na linha
                         statusDisplay.textContent = novoStatus;
                         statusDisplay.className = STATUS_CLASSES[novoStatus]; 
                     }
                 } else {
                     alert(`Erro ao atualizar o status: ${data.message}`);
-                    // Reverte o estado visual em caso de erro
                     statusDisplay.textContent = statusAnterior;
                     statusDisplay.className = STATUS_CLASSES[statusAnterior]; 
                 }
             } catch (error) {
                 console.error("Erro de rede:", error);
                 alert("Erro de rede ao atualizar o status.");
-                // Reverte o estado visual em caso de erro
                 statusDisplay.textContent = statusAnterior;
                 statusDisplay.className = STATUS_CLASSES[statusAnterior]; 
             } finally {
                 botao.disabled = false;
             }
         }
+        
+        // --- Funções de Edição com Modal ---
 
+        function abrirModalEdicao(idPedido) {
+            const row = document.getElementById(`pedido-${idPedido}`);
+            const pedidoData = JSON.parse(row.dataset.pedido);
+            
+            document.getElementById('modal-id-pedido').textContent = pedidoData.id;
+            document.getElementById('edit-id-pedido').value = pedidoData.id;
+            document.getElementById('edit-cliente').value = pedidoData.cliente;
+            document.getElementById('edit-data').value = pedidoData.data;
+            document.getElementById('edit-horario').value = pedidoData.horario;
+            document.getElementById('edit-total').value = pedidoData.total;
+            document.getElementById('edit-resumo').value = pedidoData.resumo;
+
+            document.getElementById('modal-edicao').style.display = "block";
+        }
+        
+        function fecharModalEdicao() {
+            document.getElementById('modal-edicao').style.display = "none";
+        }
+        
+        async function salvarEdicao() {
+            const idPedido = document.getElementById('edit-id-pedido').value;
+            const cliente = document.getElementById('edit-cliente').value;
+            const dataEntrega = document.getElementById('edit-data').value;
+            const horarioEntrega = document.getElementById('edit-horario').value;
+            const totalFinal = document.getElementById('edit-total').value;
+            const resumo = document.getElementById('edit-resumo').value;
+
+            // Formata a data de volta para dd/mm/aaaa para o Apps Script
+            const dataFormatada = dataEntrega.split('-').reverse().join('/'); 
+
+            const urlEncodedData = new URLSearchParams();
+            urlEncodedData.append('action', 'updateData'); // Ação que você deve implementar no Apps Script
+            urlEncodedData.append('id', idPedido);
+            urlEncodedData.append('Nome_do_Cliente', cliente);
+            urlEncodedData.append('Data_da_Entrega', dataFormatada); 
+            urlEncodedData.append('Horário_da_Entrega', horarioEntrega);
+            urlEncodedData.append('Total_Final', totalFinal);
+            urlEncodedData.append('Resumo_dos_Itens', resumo);
+            
+            const modal = document.getElementById('modal-edicao');
+            const saveButton = modal.querySelector('button[onclick="salvarEdicao()"]');
+            saveButton.textContent = 'Salvando...';
+            saveButton.disabled = true;
+
+            try {
+                // Requisição para atualizar os dados (POST com a action=updateData)
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    body: urlEncodedData 
+                });
+                
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(`Dados do Pedido ${idPedido} atualizados com sucesso!`);
+                    fecharModalEdicao();
+                    carregarPedidos(); // Recarrega a lista para mostrar a mudança
+                } else {
+                    alert(`Erro ao salvar edições: ${data.message}`);
+                }
+            } catch (error) {
+                console.error("Erro de rede:", error);
+                alert("Erro de rede ao salvar edições.");
+            } finally {
+                saveButton.textContent = 'Salvar Edições';
+                saveButton.disabled = false;
+            }
+        }
+
+        // --- Inicialização e Atualização Automática ---
+        
+        // Chamada inicial
         document.addEventListener('DOMContentLoaded', carregarPedidos);
+
+        // Atualização automática a cada 5 minutos (300000 milissegundos)
+        setInterval(carregarPedidos, 300000); 
+
     </script>
 </body>
 </html>

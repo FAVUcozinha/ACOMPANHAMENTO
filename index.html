@@ -89,8 +89,11 @@
                     const statusAtual = pedido.Status || 'Aberto';
                     const resumo = pedido.Resumo_dos_Itens || 'Sem Resumo'; 
                     const nomeCliente = pedido.Nome_do_Cliente || 'N/A';
+                    
+                    // CORRIGIDO: Lendo os campos como string da Planilha
                     const dataEntrega = pedido.Data_da_Entrega || '---';
                     const horarioEntrega = pedido.Horário_da_Entrega || '---';
+                    
                     const totalFinal = pedido.Total_Final || '0,00';
                     
                     const resumoSimplificado = resumo.length > MAX_RESUMO_LENGTH ? resumo.substring(0, MAX_RESUMO_LENGTH) + '...' : resumo;
@@ -122,8 +125,8 @@
                 });
                 
             } catch (error) {
-                console.error("Erro na comunicação com a API:", error);
-                container.innerHTML = '<table><tr><td colspan="6">Erro de rede. Verifique a URL e a Implantação do Apps Script.</td></tr></table>';
+                console.error("Erro na comunicação com a API (Painel.html):", error);
+                tbody.innerHTML = '<tr><td colspan="6">Erro de rede. Verifique a URL e a Implantação do Apps Script.</td></tr>';
             } finally {
                 container.classList.remove('loading');
             }

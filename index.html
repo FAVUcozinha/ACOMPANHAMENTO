@@ -6,7 +6,195 @@
     <title>Dashboard de Pedidos CRM - Google Sheets</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* CSS será inserido aqui */
+        /* ========================================================================= */
+        /* CSS (ESTILOS) */
+        /* ========================================================================= */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f7f9;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .controls label {
+            font-size: 14px;
+        }
+        .controls button, .controls input[type="month"] {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        #refresh-button {
+            background-color: #3498db;
+            color: white;
+        }
+        #toggle-archived {
+            background-color: #95a5a6;
+            color: white;
+        }
+        #kanban-board {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            overflow-x: auto;
+        }
+        .kanban-column {
+            flex-basis: 300px; /* Largura base para a coluna */
+            flex-shrink: 0; /* Impede que a coluna encolha */
+            background-color: #ecf0f1;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            min-height: 70vh; /* Altura mínima para arrastar */
+        }
+        .column-header {
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #bdc3c7;
+            text-align: center;
+        }
+        .pedido-card {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-left: 5px solid #3498db; /* Cor de destaque padrão */
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .pedido-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .card-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+        }
+        .card-detail {
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+        
+        /* Cores dos Cards por Status (Sugestão) */
+        .status-Orçado { border-left-color: #f39c12; } /* Laranja */
+        .status-Pago-50- { border-left-color: #2ecc71; } /* Verde - Ajustado para CSS */
+        .status-Pago { border-left-color: #1abc9c; } /* Verde Claro */
+        .status-Entregue { border-left-color: #34495e; opacity: 0.7; } /* Cinza Escuro (Arquivado) */
+
+        /* Drag & Drop Styles */
+        .dragging {
+            opacity: 0.5;
+            border: 2px dashed #3498db;
+        }
+        .over {
+            background-color: #dce4e7;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none; /* Oculto por padrão */
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 8px;
+            position: relative;
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .modal-actions button {
+            padding: 10px 15px;
+            margin-top: 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: #2980b9;
+            color: white;
+            transition: background-color 0.2s;
+        }
+        .modal-actions button.danger {
+            background-color: #e74c3c;
+            margin-left: 10px;
+        }
+        #modal-details strong {
+            display: block;
+            margin-top: 10px;
+            color: #2c3e50;
+        }
+        #modal-details pre {
+            white-space: pre-wrap;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #eee;
+        }
+        /* Estilos do formulário de edição */
+        #edit-form label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        #edit-form input, #edit-form textarea {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        #edit-form button[type="submit"] {
+            background-color: #27ae60;
+            margin-top: 15px;
+        }
+        #edit-form button[type="button"] {
+            background-color: #95a5a6;
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
@@ -15,9 +203,10 @@
         <h1>Painel de Pedidos (CRM)</h1>
         <div class="controls">
             <button id="refresh-button">Recarregar Pedidos</button>
+            <button id="report-button">Relatório Mensal</button>
             <label for="month-filter">Filtrar Mês de Entrega:</label>
             <input type="month" id="month-filter" value="">
-            <button id="toggle-archived">Mostrar Arquivados</button>
+            <button id="toggle-archived">Mostrar Entregues</button>
         </div>
     </header>
 
@@ -47,7 +236,7 @@
                 <label>Horário de Entrega:</label>
                 <input type="time" id="edit-horario" required><br>
                 
-                <label>Total Final:</label>
+                <label>Total Final (R$):</label>
                 <input type="number" step="0.01" id="edit-total" required><br>
                 
                 <label>Resumo dos Itens:</label>
@@ -58,9 +247,478 @@
             </form>
         </div>
     </div>
+    
+    <div id="report-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button-report">&times;</span>
+            <h2>Relatório Mensal de Vendas</h2>
+            <div id="report-details">
+                </div>
+        </div>
+    </div>
 
     <script>
-        // JavaScript será inserido aqui
+        // =========================================================================
+        // JAVASCRIPT (LÓGICA)
+        // =========================================================================
+
+        // =========================================================================
+        // CONFIGURAÇÃO
+        // 🚨🚨 SUBSTITUA ESTA URL PELO SEU ENDPOINT DE EXECUÇÃO 🚨🚨
+        // =========================================================================
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzPg0luc_LKOhkOLrefXv202qDAHMHFHO_19WF4dtXoc_20MwykJzNI5IRuYlq0Rr5s/exec';
+
+        // Status que aparecerão nas colunas Kanban
+        const KANBAN_STATUSES = [
+            'Orçado',
+            'Pago - 50%',
+            'Pago',
+            'Entregue' 
+        ];
+
+        // O estado global da aplicação
+        let todosOsPedidos = [];
+        let pedidoSendoEditado = null;
+        let showArchived = false;
+
+        // =========================================================================
+        // FUNÇÕES DE UTILIDADE E RENDERIZAÇÃO
+        // =========================================================================
+
+        /**
+         * Busca os dados da planilha via Apps Script
+         */
+        async function fetchPedidos() {
+            document.getElementById('refresh-button').textContent = 'Carregando...';
+            document.getElementById('refresh-button').disabled = true;
+
+            try {
+                const response = await fetch(`${API_URL}?action=read`);
+                const json = await response.json();
+
+                if (json.success) {
+                    todosOsPedidos = json.pedidos.map(p => ({
+                        ...p,
+                        // Cria uma chave para ordenação (ISO Date format)
+                        sortDate: new Date(`${p.Data_da_Entrega}T${p.Horário_da_Entrega}:00`) 
+                    }));
+                    
+                    // Ordena os pedidos pela data/hora de entrega mais próxima
+                    todosOsPedidos.sort((a, b) => a.sortDate - b.sortDate);
+
+                    renderKanban();
+                } else {
+                    console.error("Erro ao buscar pedidos:", json.message);
+                    alert("Erro ao carregar os pedidos: " + json.message);
+                }
+            } catch (error) {
+                console.error("Erro na comunicação com a API:", error);
+                alert("Erro de rede ao carregar os pedidos.");
+            } finally {
+                document.getElementById('refresh-button').textContent = 'Recarregar Pedidos';
+                document.getElementById('refresh-button').disabled = false;
+            }
+        }
+
+        /**
+         * Renderiza o quadro Kanban e os cards
+         */
+        function renderKanban() {
+            const kanbanBoard = document.getElementById('kanban-board');
+            kanbanBoard.innerHTML = ''; // Limpa o quadro
+
+            const monthFilter = document.getElementById('month-filter').value;
+            const [filterYear, filterMonth] = monthFilter ? monthFilter.split('-') : [null, null];
+
+            KANBAN_STATUSES.forEach(status => {
+                const column = document.createElement('div');
+                column.className = 'kanban-column';
+                column.dataset.status = status; 
+                column.addEventListener('dragover', dragOver);
+                column.addEventListener('drop', drop);
+                column.addEventListener('dragleave', dragLeave);
+
+                const header = document.createElement('div');
+                header.className = 'column-header';
+                
+                let filteredPedidos = todosOsPedidos.filter(p => p.Status === status);
+
+                if (filterMonth && filterYear) {
+                    filteredPedidos = filteredPedidos.filter(p => {
+                        const pedidoDate = new Date(p.Data_da_Entrega);
+                        // Month is 0-indexed in JS Date, so compare with filterMonth
+                        return pedidoDate.getMonth() + 1 == filterMonth && pedidoDate.getFullYear() == filterYear;
+                    });
+                }
+
+                if (status === 'Entregue' && !showArchived) {
+                    header.textContent = `${status} (${filteredPedidos.length} - Oculto)`;
+                    column.style.display = 'none'; // Oculta a coluna
+                } else {
+                    header.textContent = `${status} (${filteredPedidos.length})`;
+                }
+
+                column.appendChild(header);
+
+                filteredPedidos.forEach(pedido => {
+                    const card = createPedidoCard(pedido);
+                    column.appendChild(card);
+                });
+
+                kanbanBoard.appendChild(column);
+            });
+        }
+
+        /**
+         * Cria o elemento HTML para um card de pedido
+         */
+        function createPedidoCard(pedido) {
+            const card = document.createElement('div');
+            // Sanitize o status: remove espaços e caracteres especiais, exceto '-'
+            const sanitizedStatus = pedido.Status.replace(/[^a-zA-Z0-9-]/g, '-').replace(/-+/g, '-');
+
+            card.className = `pedido-card status-${sanitizedStatus}`;
+            card.setAttribute('draggable', true);
+            card.dataset.id = pedido.ID_do_Pedido;
+
+            const total = parseFloat(pedido.Total_Final || 0).toFixed(2).replace('.', ',');
+
+            card.innerHTML = `
+                <div class="card-title">${pedido.Nome_do_Cliente}</div>
+                <div class="card-detail">Entrega: ${formatDate(pedido.Data_da_Entrega)} às ${pedido.Horário_da_Entrega}</div>
+                <div class="card-detail">Total: R$ ${total}</div>
+                <div class="card-detail">ID: ${pedido.ID_do_Pedido}</div>
+            `;
+
+            card.addEventListener('dragstart', dragStart);
+            card.addEventListener('click', () => showModal(pedido.ID_do_Pedido));
+
+            return card;
+        }
+
+        /**
+         * Função auxiliar para formatar a data (DD/MM/YYYY)
+         */
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            try {
+                // Tenta criar um objeto Date e formata para dd/mm/yyyy
+                const date = new Date(dateString + 'T00:00:00'); // Adiciona T00:00:00 para evitar fusos
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                return `${day}/${month}/${year}`;
+            } catch {
+                return dateString;
+            }
+        }
+        
+        // =========================================================================
+        // FUNÇÕES DE DRAG AND DROP (KANBAN)
+        // =========================================================================
+
+        function dragStart(e) {
+            e.dataTransfer.setData('text/plain', e.target.dataset.id);
+            e.target.classList.add('dragging');
+        }
+
+        function dragOver(e) {
+            e.preventDefault(); 
+            const column = e.currentTarget;
+            column.classList.add('over');
+        }
+
+        function dragLeave(e) {
+            e.currentTarget.classList.remove('over');
+        }
+
+        async function drop(e) {
+            e.preventDefault();
+            const column = e.currentTarget;
+            const newStatus = column.dataset.status;
+            const pedidoId = e.dataTransfer.getData('text/plain');
+            const draggedCard = document.querySelector(`.dragging[data-id="${pedidoId}"]`); // Busca pelo ID
+
+            column.classList.remove('over');
+            
+            if (draggedCard) {
+                draggedCard.classList.remove('dragging');
+                // Move o card visualmente
+                column.appendChild(draggedCard);
+            }
+            
+            // Atualiza o status na planilha via API
+            await updatePedidoStatus(pedidoId, newStatus);
+        }
+
+        /**
+         * Atualiza o status do pedido via Apps Script (POST)
+         */
+        async function updatePedidoStatus(id, status) {
+            const formData = new FormData();
+            formData.append('action', 'updateStatus');
+            formData.append('id', id);
+            formData.append('status', status);
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: new URLSearchParams(formData)
+                });
+                const json = await response.json();
+
+                if (json.success) {
+                    console.log(`Status do pedido ${id} atualizado para "${status}".`);
+                    // Recarrega os dados para sincronização total e re-renderização
+                    await fetchPedidos(); 
+                } else {
+                    alert(`Falha ao atualizar status: ${json.message}`);
+                    await fetchPedidos(); // Recarrega para reverter a alteração visual
+                }
+            } catch (error) {
+                alert("Erro de rede ao tentar atualizar o status.");
+                await fetchPedidos(); 
+            }
+        }
+
+        // =========================================================================
+        // MODAL/EDIÇÃO/RELATÓRIO
+        // =========================================================================
+
+        const modal = document.getElementById('modal');
+        const modalDetails = document.getElementById('modal-details');
+        const editForm = document.getElementById('edit-form');
+        const reportModal = document.getElementById('report-modal');
+
+        /**
+         * Mostra o modal com os detalhes do pedido
+         */
+        function showModal(id) {
+            const pedido = todosOsPedidos.find(p => p.ID_do_Pedido === id);
+            if (!pedido) return;
+
+            pedidoSendoEditado = pedido; 
+            
+            document.getElementById('pedido-id').textContent = id;
+            modalDetails.innerHTML = `
+                <p><strong>Status:</strong> ${pedido.Status}</p>
+                <p><strong>Cliente:</strong> ${pedido.Nome_do_Cliente}</p>
+                <p><strong>Data/Hora de Entrega:</strong> ${formatDate(pedido.Data_da_Entrega)} às ${pedido.Horário_da_Entrega}</p>
+                <p><strong>Total Final:</strong> R$ ${parseFloat(pedido.Total_Final || 0).toFixed(2).replace('.', ',')}</p>
+                <strong>Resumo dos Itens:</strong> 
+                <pre>${pedido.Resumo_dos_Itens}</pre>
+            `;
+
+            document.getElementById('edit-nome').value = pedido.Nome_do_Cliente;
+            document.getElementById('edit-data').value = pedido.Data_da_Entrega;
+            document.getElementById('edit-horario').value = pedido.Horário_da_Entrega;
+            document.getElementById('edit-total').value = parseFloat(pedido.Total_Final || 0).toFixed(2);
+            document.getElementById('edit-resumo').value = pedido.Resumo_dos_Itens;
+            
+            modal.style.display = 'block';
+            editForm.style.display = 'none'; 
+            document.getElementById('modal-details').style.display = 'block';
+            document.querySelector('.modal-actions').style.display = 'block';
+        }
+
+        /**
+         * Fecha o modal principal
+         */
+        function closeModal() {
+            modal.style.display = 'none';
+            pedidoSendoEditado = null;
+        }
+        
+        /**
+         * Fecha o modal de relatório
+         */
+        function closeReportModal() {
+            reportModal.style.display = 'none';
+        }
+
+        /**
+         * Submissão do formulário de edição
+         */
+        editForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const dataToUpdate = {
+                id: pedidoSendoEditado.ID_do_Pedido,
+                Nome_do_Cliente: document.getElementById('edit-nome').value,
+                Data_da_Entrega: document.getElementById('edit-data').value,
+                Horário_da_Entrega: document.getElementById('edit-horario').value,
+                Total_Final: document.getElementById('edit-total').value,
+                Resumo_dos_Itens: document.getElementById('edit-resumo').value
+            };
+
+            await updatePedidoData(dataToUpdate);
+        });
+
+        /**
+         * Atualiza os dados do pedido (POST action=updateData)
+         */
+        async function updatePedidoData(data) {
+            const formData = new FormData();
+            formData.append('action', 'updateData');
+            
+            for (const key in data) {
+                formData.append(key, data[key]);
+            }
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: new URLSearchParams(formData)
+                });
+                const json = await response.json();
+
+                if (json.success) {
+                    alert(`Dados do pedido ${data.id} atualizados com sucesso!`);
+                    closeModal();
+                    await fetchPedidos(); 
+                } else {
+                    alert(`Falha ao atualizar dados: ${json.message}`);
+                }
+            } catch (error) {
+                alert("Erro de rede ao tentar atualizar os dados.");
+            }
+        }
+
+        /**
+         * Lida com a exclusão (Requer função 'delete' no Apps Script)
+         */
+        document.getElementById('delete-button').addEventListener('click', () => {
+             if (!pedidoSendoEditado) return;
+             if (!confirm(`Tem certeza que deseja EXCLUIR o pedido ${pedidoSendoEditado.ID_do_Pedido}? Esta ação é IRREVERSÍVEL (na planilha)!`)) {
+                return;
+             }
+             
+             // **NOTA**: ESTE TRECHO EXIGE QUE VOCÊ ADICIONE UM 'action=delete'
+             // AO SEU CÓDIGO APPS SCRIPT.
+             alert("Atenção: A função de 'delete' (excluir) não está implementada na API do Apps Script fornecida. O pedido não foi excluído.");
+             closeModal();
+        });
+
+
+        // =========================================================================
+        // FUNÇÕES DE RELATÓRIO
+        // =========================================================================
+
+        document.getElementById('report-button').addEventListener('click', showReportModal);
+
+        function showReportModal() {
+            const monthFilter = document.getElementById('month-filter').value;
+
+            if (!monthFilter) {
+                alert("Por favor, selecione um mês no filtro para gerar o relatório.");
+                return;
+            }
+
+            const [filterYear, filterMonth] = monthFilter.split('-');
+
+            const pedidosDoMes = todosOsPedidos.filter(p => {
+                const pedidoDate = new Date(p.Data_da_Entrega);
+                return pedidoDate.getMonth() + 1 == filterMonth && pedidoDate.getFullYear() == filterYear;
+            });
+
+            // Agrega os dados
+            let totalPedidos = pedidosDoMes.length;
+            let totalVendas = 0;
+            let totalDesconto = 0;
+            let totalLiquido = 0;
+            let pedidosEntregues = 0;
+
+            pedidosDoMes.forEach(p => {
+                const totalFinal = parseFloat(p.Total_Final || 0);
+                const status = p.Status;
+
+                // Supondo que "Total Bruto" e "Desconto" não vieram do script,
+                // vamos focar no Total Final e contar os entregues.
+                // Se precisar de Desconto/Bruto, ajuste a função readPedidos no Apps Script.
+                totalLiquido += totalFinal;
+                
+                if (status === 'Entregue') {
+                    pedidosEntregues++;
+                }
+                
+                // Exemplo: calcular "Desconto" se o script retornasse Total Bruto (p.Total_Bruto)
+                // totalDesconto += (parseFloat(p.Total_Bruto) - totalFinal);
+            });
+
+            const monthName = new Date(filterYear, filterMonth - 1).toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+
+            document.getElementById('report-details').innerHTML = `
+                <h3>Resultados para ${monthName}</h3>
+                <p><strong>Total de Pedidos no Mês:</strong> ${totalPedidos}</p>
+                <p><strong>Pedidos Entregues (Arquivados):</strong> ${pedidosEntregues}</p>
+                <hr>
+                <p><strong>Valor Recebido Total:</strong> R$ ${totalLiquido.toFixed(2).replace('.', ',')}</p>
+                <p style="color: green;">* Este valor considera o 'Total Final' de todos os pedidos agendados para este mês.</p>
+                <p style="color: red;">* Gráfico Simples: Não implementado neste código puro, mas seria o próximo passo com uma biblioteca como Chart.js.</p>
+            `;
+
+            reportModal.style.display = 'block';
+        }
+
+
+        // =========================================================================
+        // INICIALIZAÇÃO E EVENTOS
+        // =========================================================================
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Define o filtro de mês para o mês atual por padrão (opcional)
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            document.getElementById('month-filter').value = `${year}-${month}`;
+
+
+            // 1. Inicializa o carregamento dos pedidos
+            fetchPedidos();
+
+            // 2. Eventos do botão de Recarregar
+            document.getElementById('refresh-button').addEventListener('click', fetchPedidos);
+
+            // 3. Eventos do Modal (fechar)
+            document.querySelector('#modal .close-button').addEventListener('click', closeModal);
+            document.querySelector('#report-modal .close-button-report').addEventListener('click', closeReportModal);
+            
+            // Fecha modais ao clicar fora
+            window.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    closeModal();
+                } else if (event.target === reportModal) {
+                    closeReportModal();
+                }
+            });
+
+            // 4. Polling (Atualização em "Tempo Real" - 30 segundos)
+            setInterval(fetchPedidos, 30000); 
+            
+            // 5. Filtro por Mês (Re-renderiza o Kanban)
+            document.getElementById('month-filter').addEventListener('change', renderKanban);
+            
+            // 6. Botão Arquivado (Toggle Entregues)
+            document.getElementById('toggle-archived').addEventListener('click', (e) => {
+                showArchived = !showArchived;
+                e.target.textContent = showArchived ? 'Ocultar Entregues' : 'Mostrar Entregues';
+                renderKanban(); 
+            });
+
+            // 7. Botões do formulário de edição
+            document.getElementById('edit-button').addEventListener('click', () => {
+                document.getElementById('modal-details').style.display = 'none';
+                document.querySelector('.modal-actions').style.display = 'none';
+                editForm.style.display = 'block';
+            });
+
+            document.getElementById('cancel-edit').addEventListener('click', () => {
+                document.getElementById('modal-details').style.display = 'block';
+                document.querySelector('.modal-actions').style.display = 'block';
+                editForm.style.display = 'none';
+            });
+        });
+
     </script>
 </body>
 </html>

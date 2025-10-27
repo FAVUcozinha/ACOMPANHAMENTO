@@ -13,7 +13,7 @@
             font-family: 'Basic Choice 2';
             /* ⚠️ AJUSTE O CAMINHO DA FONTE SE NECESSÁRIO */
             src: url('fonts/Basic Choice 2.ttf') format('truetype'),
-                 local('Roboto'); 
+                local('Roboto'); 
             font-weight: normal;
             font-style: normal;
         }
@@ -130,18 +130,41 @@
 
         /* Cores de Status */
         .pedido-card { background-color: white; border: 1px solid #ddd; border-left: 5px solid #7FB1C8; border-radius: 6px; padding: 10px; margin-bottom: 10px; cursor: pointer; color: #1A2B0F; }
+        .status-Aberto { border-left-color: #17a2b8; } 
         .status-Orçado { border-left-color: #E09F41; } 
         .status-Agendado-50- { border-left-color: #1abc9c; } 
         .status-Agendado-100- { border-left-color: #2ecc71; } 
         .status-Entregue-Pendente { border-left-color: #7FB1C8; opacity: 0.8; } 
+        .status-Entregue { border-left-color: #7FB1C8; opacity: 0.8; } 
         .status-Entregue-Pago { border-left-color: #1A2B0F; opacity: 0.7; } 
         .status-Cancelado { border-left-color: #E60000; opacity: 0.6; } 
         
-        /* ========================================================================= */
-        /* ESTILOS DO MODAL E EDIÇÃO (Aplicando Padrão Arredondado) */
-        /* ========================================================================= */
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); padding-top: 60px; }
-        .modal-content { background-color: #F4E6CB; border-radius: 10px; padding: 25px; max-width: 650px; }
+        /* Estilos do Modal */
+        .modal { 
+            /* 🚨 CORREÇÃO CRÍTICA: display: none como padrão */
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0; 
+            top: 0; 
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.6); 
+            /* Propriedades de centralização aplicadas quando o JS define display: flex */
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .modal-content { 
+            background-color: #F4E6CB; 
+            border-radius: 10px; 
+            padding: 25px; 
+            max-width: 650px; 
+            width: 90%;
+            position: relative; 
+            margin: auto; /* Garante compatibilidade de centralização */
+        }
         .close-button { color: #E09F41; float: right; font-size: 30px; font-weight: bold; position: absolute; top: 10px; right: 20px; }
         #modal-details strong { color: #7FB1C8; }
         #modal-details pre { white-space: pre-wrap; background-color: white; padding: 10px; border-radius: 4px; border: 1px solid #7FB1C8; color: #1A2B0F; }
@@ -157,6 +180,10 @@
             background-color: white;
             color: #1A2B0F;
             font-family: 'Basic Choice 2', 'Roboto', sans-serif;
+        }
+        #edit-form textarea[readonly] {
+             background-color: #eee; /* Cor de fundo para campo não editável */
+             cursor: not-allowed;
         }
         .modal-actions button, #edit-form button {
             font-family: 'Basic Choice 2', 'Roboto', sans-serif;
@@ -177,9 +204,19 @@
         #cancel-edit { background-color: #E09F41; box-shadow: 0 4px #c2883a; } 
         #open-calculator-button { background-color: #7FB1C8; box-shadow: 0 4px #4c7e93; margin-right: 10px; margin-bottom: 10px; border-radius: 20px; }
         
-        /* Resto dos estilos de modal... */
         #resumo-editor-section { padding: 10px; background-color: #F4E6CB; border-radius: 8px; margin-top: 10px; border: 1px solid #7FB1C8; }
-        #calculator-modal { background-color: rgba(0,0,0,0.8); z-index: 1100; display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; justify-content: center; align-items: center; }
+        #calculator-modal { 
+            background-color: rgba(0,0,0,0.8); 
+            z-index: 1100; 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            justify-content: center; 
+            align-items: center; 
+        }
         #calculator-iframe { width: 95%; height: 95%; border: 5px solid #E09F41; border-radius: 15px; background-color: white; }
 
     </style>
@@ -190,9 +227,9 @@
         <h1>PEDIDOS FAVU COZINHA AFETIVA</h1>
         <div class="controls">
              <div id="dashboard-totals">
-                <strong>R$ 0,00</strong>
-                <span id="total-pedidos">0 pedidos</span>
-            </div>
+                 <strong>R$ 0,00</strong>
+                 <span id="total-pedidos">0 pedidos</span>
+             </div>
         </div>
     </header>
 
@@ -203,7 +240,7 @@
     </div>
 
     <main id="kanban-board">
-        </main>
+    </main>
     
     <div id="modal" class="modal">
         <div class="modal-content">
@@ -228,6 +265,10 @@
             <form id="edit-form" style="display: none;">
                 <h3>Editar Dados do Pedido</h3>
                 
+                <label for="edit-status">Status do Pedido:</label>
+                <select id="edit-status" name="status" required>
+                    </select><br>
+                
                 <label>Nome do Cliente:</label>
                 <input type="text" id="edit-nome" required><br>
                 
@@ -247,10 +288,10 @@
                 <label>Total Final (R$):</label>
                 <input type="number" step="0.01" id="edit-total" required><br>
 
-                <label>Resumo dos Itens (Editável):</label>
+                <label>Resumo dos Itens (NÃO EDITÁVEL):</label>
                 <div id="resumo-editor-section">
                     <button type="button" id="open-calculator-button" onclick="openCalculatorModal()">Gerar Resumo por Itens</button>
-                    <textarea id="edit-resumo" rows="8" required></textarea>
+                    <textarea id="edit-resumo" rows="8" readonly required></textarea> 
                 </div>
 
                 <div style="display: flex; gap: 10px;">
@@ -276,11 +317,13 @@
         const API_URL = 'https://script.google.com/macros/s/AKfycbzPg0luc_LKOhkOLrefXv202qDAHMHFHO_19WF4dtXoc_20MwykJzNI5IRuYlq0Rr5s/exec'; 
         const CALCULATOR_URL = 'https://favucozinha.github.io/Calculadora-Favu/'; 
 
-        // NOVOS STATUS DE KANBAN (K)
+        // ARRAY FINAL DE STATUS
         const KANBAN_STATUSES = [
+            'Aberto',
             'Orçado',
             'Agendado - 50%',
             'Agendado - 100%',
+            'Entregue', 
             'Entregue - Pendente',
             'Entregue - Pago',
             'Cancelado'
@@ -295,7 +338,6 @@
 
         /**
          * Retorna a data no formato DD/MM/YYYY.
-         * Assume que a API já está enviando a data em DD/MM/YYYY.
          */
         function formatDate(dateString) {
             if (dateString && typeof dateString === 'string') {
@@ -372,8 +414,8 @@
                 if (json.success) {
                     
                     todosOsPedidos = json.pedidos.map(p => {
-                        let dataAPI = String(p.Data_da_Entrega || '');
-                        let horarioAPI = String(p.Horário_da_Entrega || '00:00');
+                        let dataAPI = String(p.Data_da_Entrega || ''); // DD/MM/YYYY
+                        let horarioAPI = String(p.Horário_da_Entrega || '00:00'); // HH:MM
 
                         // Converte DD/MM/AAAA para YYYY-MM-DD para o filtro e input HTML
                         let dataParaInput = formatDDMMYYYYtoYYYYMMDD(dataAPI);
@@ -384,7 +426,6 @@
                         if (dataParaInput) {
                            try {
                                 sortDate = new Date(`${dataParaInput.replace(/-/g, '/')} ${formatTime(horarioAPI)}`);
-                                if (isNaN(sortDate.getTime())) throw new Error("Invalid final Date");
                            } catch(e) {
                                 sortDate = new Date(0);
                            }
@@ -392,8 +433,7 @@
                         
                         return {
                             ...p,
-                            // Data_da_Entrega: DD/MM/YYYY (para exibição)
-                            Data_para_Input: dataParaInput, // YYYY-MM-DD (para filtro e input[type=date])
+                            Data_para_Input: dataParaInput, // YYYY-MM-DD (para filtro)
                             Horário_da_Entrega: horarioAPI, 
                             sortDate: sortDate 
                         };
@@ -402,7 +442,7 @@
                     todosOsPedidos.sort((a, b) => a.sortDate - b.sortDate);
 
                     renderKanban();
-                    updateDashboardTotals();
+                    // updateDashboardTotals é chamado dentro de renderKanban
                 } else {
                     console.error("Erro ao buscar pedidos:", json.message);
                     alert("Erro ao carregar os pedidos: " + json.message);
@@ -424,11 +464,13 @@
             kanbanBoard.innerHTML = '';
             
             const monthFilterInput = document.getElementById('month-filter').value;
-            // monthFilterInput é YYYY-MM.
             
-            const currentFilterYear = monthFilterInput ? monthFilterInput.substring(0, 4) : null;
-            const currentFilterMonth = monthFilterInput ? monthFilterInput.substring(5, 7) : null; 
+            const filterYear = monthFilterInput ? monthFilterInput.substring(0, 4) : null;
+            const filterMonth = monthFilterInput ? monthFilterInput.substring(5, 7) : null; 
             
+            // Variável para calcular totais APENAS dos pedidos visíveis
+            let pedidosVisiveis = [];
+
             KANBAN_STATUSES.forEach(status => {
                 const column = document.createElement('div');
                 column.className = 'kanban-column';
@@ -445,43 +487,54 @@
                 // =============================================================
                 // LÓGICA DE FILTRO BASEADA NA DATA DE ENTREGA (COLUNA C)
                 // =============================================================
-                if (currentFilterMonth && currentFilterYear) {
-                    filteredPedidos = filteredPedidos.filter(p => {
+                let pedidosFiltradosPorData = filteredPedidos;
+
+                if (filterMonth && filterYear) {
+                    pedidosFiltradosPorData = filteredPedidos.filter(p => {
                         const dateInput = String(p.Data_para_Input); // Espera YYYY-MM-DD
                         
                         if (dateInput && dateInput.length === 10 && dateInput !== 'N/A') {
                              const pYear = dateInput.substring(0, 4);
                              const pMonth = dateInput.substring(5, 7);
                              
-                             // O pedido é exibido APENAS se o mês e ano da ENTREGA coincidirem.
-                             return pMonth === currentFilterMonth && pYear === currentFilterYear;
+                             return pMonth === filterMonth && pYear === filterYear;
                         }
-                        return false; // Descarta pedidos com data inválida para filtro
+                        return false; 
                     });
                 }
+                // FIM DA LÓGICA DE FILTRO
 
-                header.textContent = `${status} (${filteredPedidos.length})`;
+                // Adiciona pedidos visíveis à lista para cálculo do dashboard
+                pedidosVisiveis.push(...pedidosFiltradosPorData);
+                
+                header.textContent = `${status} (${pedidosFiltradosPorData.length})`;
                 column.appendChild(header);
 
-                filteredPedidos.forEach(pedido => {
+                pedidosFiltradosPorData.forEach(pedido => {
                     const card = createPedidoCard(pedido);
                     column.appendChild(card);
                 });
 
                 kanbanBoard.appendChild(column);
             });
+            
+            // Chama a função de totais passando apenas os pedidos visíveis.
+            updateDashboardTotals(pedidosVisiveis); 
         }
         
-        function updateDashboardTotals() {
+        /**
+         * Recebe apenas a lista de pedidos VISÍVEIS (filtrados).
+         */
+        function updateDashboardTotals(pedidosVisiveis) {
             let totalLiquidoGeral = 0;
             let totalPedidosContados = 0;
-            const statusToCount = ['Orçado', 'Agendado - 50%', 'Agendado - 100%', 'Entregue - Pendente', 'Entregue - Pago'];
+            const statusToCount = ['Aberto', 'Orçado', 'Agendado - 50%', 'Agendado - 100%', 'Entregue', 'Entregue - Pendente', 'Entregue - Pago'];
 
-            todosOsPedidos.forEach(p => {
-                 const total = parseFloat(p.Total_Final || 0);
+            pedidosVisiveis.forEach(p => {
+                 const total = parseFloat(p.Total_Final || 0); 
                  if (statusToCount.includes(p.Status)) {
-                      totalLiquidoGeral += total;
-                      totalPedidosContados++;
+                     totalLiquidoGeral += total;
+                     totalPedidosContados++;
                  }
             });
 
@@ -491,8 +544,7 @@
 
         function createPedidoCard(pedido) {
             const card = document.createElement('div');
-            // Sanitiza o novo status (substituindo espaços e caracteres não alfanuméricos por '-')
-            const sanitizedStatus = pedido.Status.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').trim('-');
+            const sanitizedStatus = pedido.Status.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').trim('-'); 
 
             card.className = `pedido-card status-${sanitizedStatus}`;
             card.setAttribute('draggable', true);
@@ -512,7 +564,11 @@
             `;
 
             card.addEventListener('dragstart', dragStart);
-            card.addEventListener('click', () => showModal(pedido.ID_do_Pedido)); 
+            // Corrige o conflito de clique/drag:
+            card.addEventListener('click', (e) => {
+                 e.stopPropagation(); 
+                 showModal(pedido.ID_do_Pedido);
+            }); 
 
             return card;
         }
@@ -572,19 +628,25 @@
         const editForm = document.getElementById('edit-form');
 
         function showModal(id) {
+            
             const pedido = todosOsPedidos.find(p => p.ID_do_Pedido === id);
-            if (!pedido) return;
+            if (!pedido) {
+                 console.error("Pedido não encontrado para o ID:", id);
+                 return;
+            }
 
             pedidoSendoEditado = pedido; 
             
-            const totalFormatado = parseFloat(pedido.Total_Final || 0).toFixed(2).replace('.', ',');
+            // Exibição
+            const totalNum = parseFloat(pedido.Total_Final || 0);
+            const totalFormatado = totalNum.toFixed(2).replace('.', ',');
             
             const data = pedido.Data_da_Entrega;
             const hora = formatTime(pedido.Horário_da_Entrega);
             const dataHora = `${data} às ${hora}`;
             
-            document.getElementById('modal-title').textContent = `Detalhes do Pedido ${id}`;
-            document.getElementById('pedido-id').textContent = id;
+            // Preenche o cabeçalho e detalhes
+            document.getElementById('modal-title').innerHTML = `Detalhes do Pedido <span id="pedido-id">${id}</span>`;
             document.getElementById('detail-status').textContent = pedido.Status;
             document.getElementById('detail-nome').textContent = pedido.Nome_do_Cliente;
             document.getElementById('detail-data-hora').textContent = dataHora;
@@ -593,15 +655,26 @@
             document.getElementById('detail-resumo-itens').textContent = extractResumoItens(pedido.Resumo_dos_Itens);
 
             // Preenchimento para Edição
+            const editStatusSelect = document.getElementById('edit-status');
+            editStatusSelect.innerHTML = '';
+            KANBAN_STATUSES.forEach(status => {
+                 const option = document.createElement('option');
+                 option.value = status;
+                 option.textContent = status;
+                 editStatusSelect.appendChild(option);
+            });
+            editStatusSelect.value = pedido.Status; 
+
             document.getElementById('edit-nome').value = pedido.Nome_do_Cliente;
-            // No input[type=text] de data, usamos o formato DD/MM/AAAA
-            document.getElementById('edit-data').value = pedido.Data_da_Entrega; 
-            document.getElementById('edit-horario').value = formatTime(pedido.Horário_da_Entrega);
+            document.getElementById('edit-data').value = pedido.Data_da_Entrega; // DD/MM/AAAA
+            document.getElementById('edit-horario').value = formatTime(pedido.Horário_da_Entrega); // HH:MM
             document.getElementById('edit-pagamento').value = pedido.Forma_Pagamento;
-            document.getElementById('edit-total').value = totalFormatado.replace(',', '.'); 
+            document.getElementById('edit-total').value = totalNum.toFixed(2); 
+            
+            // O Resumo é preenchido, mas é readonly
             document.getElementById('edit-resumo').value = pedido.Resumo_dos_Itens;
             
-            modal.style.display = 'flex';
+            modal.style.display = 'flex'; // Torna o modal visível
             document.getElementById('modal-details').style.display = 'block';
             document.querySelector('.modal-actions').style.display = 'block';
             editForm.style.display = 'none';
@@ -627,6 +700,13 @@
             editForm.style.display = 'none';
         });
         
+        // Adiciona o evento de submissão do formulário de edição
+        editForm.addEventListener('submit', async (e) => {
+             e.preventDefault();
+             await updatePedidoData();
+        });
+
+
         function openCalculatorModal() {
             if (!CALCULATOR_URL) {
                  alert("URL do calculador não configurada. Defina a constante CALCULATOR_URL no código.");
@@ -637,30 +717,35 @@
         }
         
         function closeCalculatorModal(event) {
+             // Fecha apenas se o clique for no fundo do modal
              if (event.target.id === 'calculator-modal') {
                 document.getElementById('calculator-iframe').src = '';
                 document.getElementById('calculator-modal').style.display = 'none';
              }
         }
         
-        async function updatePedidoData(data) {
+        async function updatePedidoData() {
             const formData = new URLSearchParams();
             formData.append('action', 'updateData');
             
             // Pega os dados do formulário de edição
+            const statusToSheet = document.getElementById('edit-status').value;
             const dataToSheet = document.getElementById('edit-data').value; // DD/MM/AAAA
             const horaToSheet = document.getElementById('edit-horario').value; // HH:MM
             const nomeToSheet = document.getElementById('edit-nome').value;
-            const totalToSheet = document.getElementById('edit-total').value;
-            const resumoToSheet = document.getElementById('edit-resumo').value;
+            const totalToSheet = document.getElementById('edit-total').value; 
             const pagamentoToSheet = document.getElementById('edit-pagamento').value;
+            
+            // O Resumo é pego da variável original (já que é readonly)
+            const resumoToSheet = pedidoSendoEditado.Resumo_dos_Itens; 
 
             // Envia no formato que o Apps Script espera
             formData.append('id', pedidoSendoEditado.ID_do_Pedido);
+            formData.append('Status', statusToSheet); 
             formData.append('Nome_do_Cliente', nomeToSheet);
             formData.append('Horário_da_Entrega', horaToSheet);
-            formData.append('Total_Final', totalToSheet);
-            formData.append('Resumo_dos_Itens', resumoToSheet);
+            formData.append('Total_Final', totalToSheet); 
+            formData.append('Resumo_dos_Itens', resumoToSheet); 
             formData.append('Forma_Pagamento', pagamentoToSheet); 
             formData.append('Data_da_Entrega', dataToSheet); 
 
@@ -698,25 +783,27 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             
+            const monthFilterInput = document.getElementById('month-filter');
             const today = new Date();
             const currentYear = today.getFullYear();
             const currentMonth = String(today.getMonth() + 1).padStart(2, '0');
             
             // Inicializa o filtro de mês/ano de entrega para o mês atual.
-            document.getElementById('month-filter').value = `${currentYear}-${currentMonth}`;
+            monthFilterInput.value = `${currentYear}-${currentMonth}`;
 
             fetchPedidos();
 
             document.getElementById('refresh-button').addEventListener('click', fetchPedidos);
-            // Agora o filtro de Mês é o único responsável pela re-renderização
-            document.getElementById('month-filter').addEventListener('change', renderKanban); 
-
+            // Chama a renderização/filtro toda vez que o mês/ano é alterado
+            monthFilterInput.addEventListener('change', renderKanban); 
+            
             setInterval(fetchPedidos, 30000); 
             
             window.addEventListener('click', (event) => {
-                if (event.target === modal) {
-                    closeModal();
-                }
+                // Fecha o modal ao clicar fora
+                 if (event.target === modal) {
+                     closeModal();
+                 }
             });
              
             const calculatorModal = document.getElementById('calculator-modal');
@@ -726,3 +813,4 @@
     </script>
 </body>
 </html>
+

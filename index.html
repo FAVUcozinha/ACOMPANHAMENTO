@@ -3,351 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Gerenciamento de Pedidos</title>
+    <title>Dashboard de Pedidos CRM - Google Sheets</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f4; color: #333; padding: 20px; }
-        .container { max-width: 1400px; margin: auto; }
-        h1 { color: #7FB1C8; }
-        
-        /* Estilo da Tabela */
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; background-color: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; font-size: 14px; vertical-align: middle; }
-        th { background-color: #7FB1C8; color: white; }
-        tr:hover { background-color: #f9f9f9; }
-        
-        /* Estilos dos Status */
-        .status-orcado { color: #888; font-weight: bold; }
-        .status-pago { color: green; font-weight: bold; background-color: #e6ffe6; border-radius: 4px; padding: 2px 5px; }
-        .status-50 { color: #E09F41; font-weight: bold; background-color: #fff8e6; border-radius: 4px; padding: 2px 5px; }
-        .status-pendente { color: #E60000; font-weight: bold; background-color: #ffe6e6; border-radius: 4px; padding: 2px 5px; }
-        .status-entregue { color: #004d00; font-weight: bold; text-decoration: line-through; } 
-        
-        /* Estilos de Ação */
-        select, button { padding: 8px; border-radius: 5px; border: 1px solid #ccc; font-size: 14px; margin: 2px 0; }
-        button { background-color: #E09F41; color: white; cursor: pointer; border: none; margin-left: 5px; transition: background-color 0.3s; }
-        button:hover { background-color: #c98e3b; }
-        .edit-button { background-color: #7FB1C8; }
-        .edit-button:hover { background-color: #6a9bb0; }
-        
-        /* Estilo do Modal (para Edição) */
-        .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
-        .modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 500px; border-radius: 10px; box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); animation-name: animatetop; animation-duration: 0.4s }
-        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
-        .close:hover, .close:focus { color: #000; text-decoration: none; cursor: pointer; }
-        .modal-content input, .modal-content textarea { width: 100%; padding: 10px; margin: 5px 0 15px 0; display: inline-block; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        
-        @keyframes animatetop { from {top: -300px; opacity: 0} to {top: 0; opacity: 1} }
+        /* CSS será inserido aqui */
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Painel de Gerenciamento de Pedidos</h1>
-        <p>Pedidos em andamento no topo.</p>
-        <button onclick="carregarPedidos()">Atualizar Lista</button>
-        <div id="lista-pedidos">Carregando pedidos...</div>
-    </div>
 
-    <div id="modal-edicao" class="modal">
-      <div class="modal-content">
-        <span class="close" onclick="fecharModalEdicao()">&times;</span>
-        <h2>Editar Pedido <span id="modal-id-pedido"></span></h2>
-        <form id="form-edicao">
-            <input type="hidden" id="edit-id-pedido">
-            
-            <label for="edit-cliente">Nome do Cliente:</label>
-            <input type="text" id="edit-cliente" required>
+    <header>
+        <h1>Painel de Pedidos (CRM)</h1>
+        <div class="controls">
+            <button id="refresh-button">Recarregar Pedidos</button>
+            <label for="month-filter">Filtrar Mês de Entrega:</label>
+            <input type="month" id="month-filter" value="">
+            <button id="toggle-archived">Mostrar Arquivados</button>
+        </div>
+    </header>
 
-            <label for="edit-data">Data da Entrega:</label>
-            <input type="date" id="edit-data">
-            
-            <label for="edit-horario">Horário da Entrega:</label>
-            <input type="time" id="edit-horario">
-            
-            <label for="edit-total">Total Final (R$):</label>
-            <input type="text" id="edit-total" pattern="[0-9.,]+" title="Use apenas números, vírgula ou ponto." required>
+    <main id="kanban-board">
+        </main>
+    
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 id="modal-title">Detalhes do Pedido <span id="pedido-id"></span></h2>
+            <div id="modal-details">
+                </div>
 
-            <label for="edit-resumo">Resumo dos Itens:</label>
-            <textarea id="edit-resumo" rows="4"></textarea>
+            <div class="modal-actions">
+                <button id="edit-button">Editar Pedido</button>
+                <button id="delete-button" class="danger">Excluir Pedido</button>
+            </div>
 
-            <button type="button" onclick="salvarEdicao()">Salvar Edições</button>
-        </form>
-      </div>
+            <form id="edit-form" style="display: none;">
+                <h3>Editar Dados</h3>
+                <label>Nome do Cliente:</label>
+                <input type="text" id="edit-nome" required><br>
+                
+                <label>Data de Entrega:</label>
+                <input type="date" id="edit-data" required><br>
+                
+                <label>Horário de Entrega:</label>
+                <input type="time" id="edit-horario" required><br>
+                
+                <label>Total Final:</label>
+                <input type="number" step="0.01" id="edit-total" required><br>
+                
+                <label>Resumo dos Itens:</label>
+                <textarea id="edit-resumo" rows="4" required></textarea><br>
+
+                <button type="submit">Salvar Edição</button>
+                <button type="button" id="cancel-edit">Cancelar</button>
+            </form>
+        </div>
     </div>
 
     <script>
-        // 🚨🚨 URL DO APPS SCRIPT - SUBSTITUA PELA SUA URL DE IMPLANTAÇÃO COMPLETA E CORRETA 🚨🚨
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzPg0luc_LKOhkOLrefXv202qDAHMHFHO_19WF4dtXoc_20MwykJzNI5IRuYlq0Rr5s/exec"; 
-        
-        // Define as novas opções de status
-        const STATUS_OPTIONS = [
-            "Orçado", 
-            "Agendado - Pago", 
-            "Agendado - 50%", 
-            "Agendado - Pendente", 
-            "Entregue", 
-            "Cancelado"
-        ];
-
-        // Mapeamento de Status para classes de estilo
-        const STATUS_CLASSES = {
-            "Orçado": "status-orcado",
-            "Agendado - Pago": "status-pago",
-            "Agendado - 50%": "status-50",
-            "Agendado - Pendente": "status-pendente",
-            "Entregue": "status-entregue",
-            "Cancelado": "status-cancelado"
-        };
-        
-        // Status que devem ser exibidos no painel (em andamento)
-        const STATUS_EM_ANDAMENTO = [
-            "Orçado", 
-            "Agendado - Pago", 
-            "Agendado - 50%", 
-            "Agendado - Pendente"
-        ];
-
-        // Função auxiliar para lidar com Timeout na leitura
-        function fetchWithTimeout(resource, options = {}) {
-            const { timeout = 15000 } = options; // 15 segundos
-            
-            const controller = new AbortController();
-            const id = setTimeout(() => controller.abort(), timeout);
-
-            return fetch(resource, {
-                ...options,
-                signal: controller.signal  
-            }).finally(() => {
-                clearTimeout(id);
-            });
-        }
-
-
-        async function carregarPedidos() {
-            const container = document.getElementById('lista-pedidos');
-            container.innerHTML = '<table><thead><tr><th>ID Pedido</th><th>Status</th><th>Cliente / Data / Horário</th><th>Total</th><th>Resumo</th><th>Ações</th></tr></thead><tbody></tbody></table>';
-            const tbody = container.querySelector('tbody');
-            container.classList.add('loading');
-
-            try {
-                // Requisição com limite de tempo (timeout) de 15 segundos
-                const response = await fetchWithTimeout(`${APPS_SCRIPT_URL}?action=read`);
-                const data = await response.json();
-
-                if (!data.success) {
-                    // Se o Apps Script responder com sucesso: false
-                    tbody.innerHTML = `<tr><td colspan="6">❌ Erro no Apps Script ao ler dados. Mensagem: ${data.message || 'Resposta inválida. Verifique os Logs do Apps Script.'}</td></tr>`;
-                    return;
-                }
-
-                // Filtra e inverte a ordem para mostrar os mais novos primeiro
-                const pedidosEmAndamento = data.pedidos
-                    .filter(p => STATUS_EM_ANDAMENTO.includes(p.Status))
-                    .reverse(); 
-
-                if (pedidosEmAndamento.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="6">Nenhum pedido em aberto.</td></tr>`;
-                    return;
-                }
-                
-                const MAX_RESUMO_LENGTH = 100;
-
-                pedidosEmAndamento.forEach(pedido => { 
-                    // CHAVES LENDO OS NOMES FORMATADOS PELO APPS SCRIPT (ID_do_Pedido, Status, etc.)
-                    const id = pedido.ID_do_Pedido || 'N/A';
-                    const statusAtual = pedido.Status || 'Orçado';
-                    const resumo = pedido.Resumo_dos_Itens || 'Sem Resumo'; 
-                    const nomeCliente = pedido.Nome_do_Cliente || 'N/A';
-                    const dataEntrega = pedido.Data_da_Entrega || '---';
-                    const horarioEntrega = pedido.Horário_da_Entrega || '---';
-                    const totalFinal = pedido.Total_Final !== undefined && pedido.Total_Final !== null ? pedido.Total_Final : '0,00';
-                    
-                    const resumoSimplificado = resumo.length > MAX_RESUMO_LENGTH ? resumo.substring(0, MAX_RESUMO_LENGTH) + '...' : resumo;
-                    
-                    // Converte a data (ex: dd/mm/aaaa) para o formato esperado pelo input type="date" (yyyy-mm-dd)
-                    const dataParaInput = dataEntrega !== '---' && typeof dataEntrega === 'string'
-                        ? dataEntrega.split('/').reverse().join('-') 
-                        : '';
-                    
-                    // Trata o total, convertendo-o para string caso venha como número do Apps Script
-                    const totalParaExibir = String(totalFinal).replace('.', ',');
-
-
-                    let row = document.createElement('tr');
-                    row.id = `pedido-${id}`;
-                    // Armazena todos os dados do pedido na linha para facilitar a edição
-                    row.dataset.pedido = JSON.stringify({
-                        id: id,
-                        cliente: nomeCliente,
-                        data: dataParaInput, // Formato yyyy-mm-dd
-                        horario: horarioEntrega,
-                        total: totalParaExibir,
-                        resumo: resumo
-                    });
-
-                    row.innerHTML = `
-                        <td>${id}</td>
-                        <td><span id="status-${id}" class="${STATUS_CLASSES[statusAtual]}">${statusAtual}</span></td>
-                        <td>
-                            <strong>${nomeCliente}</strong><br>
-                            Data: ${dataEntrega}<br>
-                            Horário: ${horarioEntrega}
-                        </td>
-                        <td>R$ ${totalParaExibir}</td>
-                        <td title="${resumo}">${resumoSimplificado}</td>
-                        <td>
-                            <select id="select-status-${id}" data-id="${id}">
-                                ${STATUS_OPTIONS.map(status => `
-                                    <option value="${status}" ${status === statusAtual ? 'selected' : ''}>
-                                        ${status}
-                                    </option>
-                                `).join('')}
-                            </select>
-                            <button onclick="atualizarStatusPedido('${id}')">Salvar Status</button>
-                            <button class="edit-button" onclick="abrirModalEdicao('${id}')">Editar</button>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
-                
-            } catch (error) {
-                console.error("Erro na comunicação com a API:", error);
-                
-                if (error.name === 'AbortError') {
-                     container.innerHTML = '<table><tr><td colspan="6">⏳ A leitura de dados excedeu o tempo limite (15s). Verifique se o Apps Script está demorando demais para processar.</td></tr></table>';
-                } else if (error instanceof SyntaxError) {
-                    container.innerHTML = '<table><tr><td colspan="6">❌ Erro de formato. O Apps Script não retornou um JSON válido. Verifique os Logs do Apps Script.</td></tr></table>';
-                } else {
-                     container.innerHTML = '<table><tr><td colspan="6">❌ Erro de rede. Verifique a URL e a Implantação do Apps Script.</td></tr></table>';
-                }
-            } finally {
-                container.classList.remove('loading');
-            }
-        }
-        
-        async function atualizarStatusPedido(idPedido) {
-            const select = document.getElementById(`select-status-${idPedido}`);
-            const novoStatus = select.value;
-            const statusDisplay = document.getElementById(`status-${idPedido}`);
-            const botao = select.nextElementSibling;
-            
-            const statusAnterior = statusDisplay.textContent;
-            statusDisplay.textContent = 'Aguarde...';
-            statusDisplay.className = '';
-            botao.disabled = true;
-
-            const urlEncodedData = new URLSearchParams();
-            urlEncodedData.append('action', 'updateStatus');
-            urlEncodedData.append('id', idPedido);
-            urlEncodedData.append('status', novoStatus);
-            
-            try {
-                const response = await fetch(APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    body: urlEncodedData 
-                });
-                
-                const data = await response.json();
-
-                if (data.success) {
-                    alert(`Status do Pedido ${idPedido} atualizado para ${novoStatus}.`);
-                    
-                    if (!STATUS_EM_ANDAMENTO.includes(novoStatus)) {
-                        document.getElementById(`pedido-${idPedido}`).remove();
-                    } else {
-                        statusDisplay.textContent = novoStatus;
-                        statusDisplay.className = STATUS_CLASSES[novoStatus]; 
-                    }
-                } else {
-                    alert(`Erro ao atualizar o status: ${data.message}`);
-                    statusDisplay.textContent = statusAnterior;
-                    statusDisplay.className = STATUS_CLASSES[statusAnterior]; 
-                }
-            } catch (error) {
-                console.error("Erro de rede:", error);
-                alert("Erro de rede ao atualizar o status.");
-                statusDisplay.textContent = statusAnterior;
-                statusDisplay.className = STATUS_CLASSES[statusAnterior]; 
-            } finally {
-                botao.disabled = false;
-            }
-        }
-        
-        function abrirModalEdicao(idPedido) {
-            const row = document.getElementById(`pedido-${idPedido}`);
-            const pedidoData = JSON.parse(row.dataset.pedido);
-            
-            document.getElementById('modal-id-pedido').textContent = pedidoData.id;
-            document.getElementById('edit-id-pedido').value = pedidoData.id;
-            document.getElementById('edit-cliente').value = pedidoData.cliente;
-            document.getElementById('edit-data').value = pedidoData.data;
-            document.getElementById('edit-horario').value = pedidoData.horario;
-            document.getElementById('edit-total').value = pedidoData.total;
-            document.getElementById('edit-resumo').value = pedidoData.resumo;
-
-            document.getElementById('modal-edicao').style.display = "block";
-        }
-        
-        function fecharModalEdicao() {
-            document.getElementById('modal-edicao').style.display = "none";
-        }
-        
-        async function salvarEdicao() {
-            const idPedido = document.getElementById('edit-id-pedido').value;
-            const cliente = document.getElementById('edit-cliente').value;
-            const dataEntrega = document.getElementById('edit-data').value;
-            const horarioEntrega = document.getElementById('edit-horario').value;
-            const totalFinal = document.getElementById('edit-total').value;
-            const resumo = document.getElementById('edit-resumo').value;
-
-            // Formata a data de volta para dd/mm/aaaa para o Apps Script
-            const dataFormatada = dataEntrega.split('-').reverse().join('/'); 
-
-            const urlEncodedData = new URLSearchParams();
-            urlEncodedData.append('action', 'updateData');
-            urlEncodedData.append('id', idPedido);
-            urlEncodedData.append('Nome_do_Cliente', cliente);
-            urlEncodedData.append('Data_da_Entrega', dataFormatada); 
-            urlEncodedData.append('Horário_da_Entrega', horarioEntrega);
-            urlEncodedData.append('Total_Final', totalFinal);
-            urlEncodedData.append('Resumo_dos_Itens', resumo);
-            
-            const modal = document.getElementById('modal-edicao');
-            const saveButton = modal.querySelector('button[onclick="salvarEdicao()"]');
-            saveButton.textContent = 'Salvando...';
-            saveButton.disabled = true;
-
-            try {
-                const response = await fetch(APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    body: urlEncodedData 
-                });
-                
-                const data = await response.json();
-
-                if (data.success) {
-                    alert(`Dados do Pedido ${idPedido} atualizados com sucesso!`);
-                    fecharModalEdicao();
-                    carregarPedidos(); // Recarrega a lista para mostrar a mudança
-                } else {
-                    alert(`Erro ao salvar edições: ${data.message}`);
-                }
-            } catch (error) {
-                console.error("Erro de rede:", error);
-                alert("Erro de rede ao salvar edições.");
-            } finally {
-                saveButton.textContent = 'Salvar Edições';
-                saveButton.disabled = false;
-            }
-        }
-
-        // --- Inicialização e Atualização Automática ---
-        
-        // Chamada inicial
-        document.addEventListener('DOMContentLoaded', carregarPedidos);
-
-        // Atualização automática a cada 5 minutos (300000 milissegundos)
-        setInterval(carregarPedidos, 300000); 
-
+        // JavaScript será inserido aqui
     </script>
 </body>
 </html>

@@ -28,6 +28,18 @@
             padding: 0;
             color: #1A2B0F; /* Texto Escuro */
         }
+        @media (min-width: 769px) {
+            body {
+                overflow-y: auto; /* Permite scroll vertical no desktop */
+                overflow-x: hidden;
+            }
+        }
+        @media (max-width: 768px) {
+            body {
+                height: 100vh;
+                overflow: hidden; /* Previne scroll da página inteira no mobile */
+            }
+        }
         header {
             background-color: #F4E6CB; /* Creme */
             color: #1A2B0F;
@@ -39,6 +51,8 @@
             flex-wrap: wrap; 
         }
         h1 { font-size: 24px; margin: 0; }
+        h1 .title-line1::after { content: ' FAVU COZINHA AFETIVA'; }
+        h1 .title-line2 { display: none; }
         
         /* Controles de Filtro e Botões (Estilo Arredondado) */
         .controls {
@@ -242,24 +256,35 @@
         /* ========================================================================= */
         #kanban-board {
             display: flex;
+            align-items: stretch; /* Faz todas as colunas terem a mesma altura */
             gap: 15px;
             padding: 20px;
+            padding-bottom: 15px; /* Espaço para a scrollbar */
             overflow-x: scroll; 
-            overflow-y: hidden;
+            overflow-y: visible; /* Permite scroll vertical no desktop */
             -webkit-overflow-scrolling: touch; 
-            min-height: 80vh;
+            min-height: calc(100vh - 180px); /* Altura mínima baseada na viewport menos header e filter-bar */
             scrollbar-width: auto; /* Firefox */
             scrollbar-color: #E09F41 #F4E6CB; /* Firefox */
+            position: relative;
+        }
+        @media (max-width: 768px) {
+            #kanban-board {
+                overflow-y: hidden;
+                height: calc(100vh - 180px); /* Altura fixa no mobile */
+            }
         }
         
         /* Estilização da scrollbar para Chrome, Edge, Safari */
         #kanban-board::-webkit-scrollbar {
-            height: 12px;
+            height: 16px; /* Scrollbar mais alta para melhor visibilidade */
         }
         
         #kanban-board::-webkit-scrollbar-track {
             background: #F4E6CB;
             border-radius: 10px;
+            position: sticky;
+            bottom: 0;
         }
         
         #kanban-board::-webkit-scrollbar-thumb {
@@ -279,6 +304,8 @@
             padding: 15px;
             box-shadow: 0 1px 5px rgba(0,0,0,0.2);
             min-height: 70vh;
+            display: flex;
+            flex-direction: column; /* Organiza o conteúdo verticalmente */
         }
         .column-header {
             font-weight: bold;
@@ -289,28 +316,160 @@
             text-align: center;
             color: #1A2B0F;
         }
+        .column-content {
+            transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+            overflow: hidden;
+            max-height: 5000px; /* Valor alto para permitir animação suave */
+            flex-grow: 1; /* Faz o conteúdo expandir para preencher o espaço disponível */
+        }
+        .kanban-column.collapsed .column-content {
+            max-height: 0;
+            opacity: 0;
+            margin-bottom: 0;
+            padding: 0;
+        }
         
         /* Estilos Mobile */
         @media (max-width: 768px) {
             header { flex-direction: column; align-items: flex-start; padding-bottom: 10px; }
-            h1 { width: 100%; text-align: center; margin-bottom: 10px; }
+            h1 { width: 100%; text-align: center; margin-bottom: 10px; display: flex; flex-direction: column; line-height: 1.3; }
+            h1 .title-line1::after { content: ''; }
+            h1 .title-line2 { display: block; margin-top: 2px; }
             .controls { justify-content: space-around; width: 100%; margin-bottom: 10px; }
             .filter-bar { flex-direction: column; align-items: flex-start; padding: 10px; }
             .filter-bar > * { width: 100%; margin-top: 5px; }
+            .search-filter { width: 100%; }
+            .search-filter input[type="text"] { 
+                width: 100%; 
+                min-width: 0; 
+                max-width: 100%; 
+                box-sizing: border-box; 
+            }
+            .date-filter { width: 100%; }
+            .date-filter input[type="text"] { 
+                width: 100%; 
+                max-width: 100%; 
+                box-sizing: border-box; 
+            }
             #dashboard-totals { text-align: center; width: 100%; padding-right: 0; margin-bottom: 10px; }
-            #kanban-board { padding: 10px; gap: 10px; }
-            .kanban-column { flex-basis: 80vw; min-height: 80vh; }
+            #kanban-board { 
+                flex-direction: column; 
+                padding: 10px; 
+                gap: 10px; 
+                overflow-x: hidden; 
+                overflow-y: auto;
+                height: calc(100vh - 180px);
+            }
+            .kanban-column { 
+                width: 100%; 
+                flex-basis: auto;
+                min-height: auto;
+                margin-bottom: 10px;
+            }
+            .kanban-column.collapsed {
+                min-height: 60px;
+            }
+            .column-header {
+                padding: 15px;
+                margin-bottom: 0;
+                cursor: pointer;
+                user-select: none;
+            }
+            .column-content {
+                max-height: 1000px;
+            }
+            .card-status-etapa {
+                display: block; /* Mostra o select de status no mobile */
+            }
+            .pedido-card {
+                pointer-events: auto;
+            }
         }
 
         /* Cores de Status */
         .pedido-card { background-color: white; border: 1px solid #ddd; border-left: 5px solid #7FB1C8; border-radius: 6px; padding: 10px; margin-bottom: 10px; cursor: pointer; color: #1A2B0F; position: relative; }
+        .card-checkbox {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            z-index: 100;
+        }
+        .pedido-card.selected {
+            border: 2px solid #E09F41;
+            box-shadow: 0 0 10px rgba(224, 159, 65, 0.5);
+        }
+        /* Barra de Ações em Lote */
+        #bulk-actions-bar {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #F4E6CB;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 1500;
+            gap: 10px;
+            align-items: center;
+        }
+        #bulk-actions-bar.show {
+            display: flex;
+        }
+        #bulk-actions-bar span {
+            margin-right: 15px;
+            font-weight: bold;
+            color: #1A2B0F;
+        }
+        #bulk-actions-bar button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Basic Choice 2', 'Roboto', sans-serif;
+            font-weight: bold;
+            color: white;
+            margin: 0 5px;
+        }
+        #bulk-move-btn { background-color: #7FB1C8; }
+        #bulk-payment-btn { background-color: #E09F41; }
+        #bulk-send-btn { background-color: #2ecc71; }
+        #bulk-actions-bar button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        /* Modais de Ações em Lote */
+        #bulk-move-modal, #bulk-payment-modal, #bulk-send-modal {
+            z-index: 2000;
+        }
+        #bulk-move-modal .modal-content, #bulk-payment-modal .modal-content, #bulk-send-modal .modal-content {
+            max-width: 500px;
+        }
+        #bulk-send-modal button {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Basic Choice 2', 'Roboto', sans-serif;
+            font-weight: bold;
+            color: white;
+        }
         .card-id { font-size: 0.85em; position: absolute; top: 10px; right: 10px; color: #7FB1C8; font-weight: bold; }
-        .card-title { font-weight: bold; font-size: 1.1em; margin-bottom: 12px; }
+        .card-title { font-weight: bold; font-size: 1.1em; margin-top: 25px; margin-bottom: 12px; }
         .card-detail { font-size: 0.9em; margin-bottom: 6px; }
         .card-status-pagamento { margin-top: 8px; display: flex; align-items: center; gap: 8px; }
         .card-status-pagamento label { display: inline-block; font-size: 0.85em; font-weight: bold; color: #1A2B0F; margin: 0; white-space: nowrap; }
-        .card-status-pagamento select { flex: 1; padding: 6px; border: 1px solid #7FB1C8; border-radius: 6px; background-color: white; color: #1A2B0F; font-family: 'Basic Choice 2', 'Roboto', sans-serif; font-size: 0.9em; cursor: pointer; }
+        .card-status-pagamento select { flex: 1; padding: 6px; border: 1px solid #7FB1C8; border-radius: 6px; background-color: white; color: #1A2B0F; font-family: 'Basic Choice 2', 'Roboto', sans-serif; font-size: 0.9em; cursor: pointer; text-align: center; }
         .card-status-pagamento select:focus { outline: none; border-color: #E09F41; }
+        .card-status-etapa { margin-top: 8px; display: none; } /* Oculto por padrão, visível apenas no mobile */
+        .card-status-etapa label { display: block; font-size: 0.85em; font-weight: bold; color: #1A2B0F; margin-bottom: 5px; }
+        .card-status-etapa select { width: 100%; padding: 8px; border: 1px solid #7FB1C8; border-radius: 6px; background-color: white; color: #1A2B0F; font-family: 'Basic Choice 2', 'Roboto', sans-serif; font-size: 0.9em; cursor: pointer; }
+        .card-status-etapa select:focus { outline: none; border-color: #E09F41; }
         .status-Pedido-Recebido { border-left-color: #17a2b8; } 
         .status-Pedido-Confirmado { border-left-color: #E09F41; } 
         .status-Aguardando-Retirada { border-left-color: #1abc9c; } 
@@ -319,17 +478,17 @@
         
         /* Cores de fundo por status de pagamento - apenas na área do status */
         .card-status-pagamento.pagamento-pendente { 
-            background-color: #FFEBEE; 
+            background-color: #FF9FA8; 
             padding: 8px;
             border-radius: 6px;
         }
         .card-status-pagamento.pagamento-50 { 
-            background-color: #FFF9E6; 
+            background-color: #FFF59D; 
             padding: 8px;
             border-radius: 6px;
         }
         .card-status-pagamento.pagamento-pago { 
-            background-color: #E8F5E9; 
+            background-color: #A5D6A7; 
             padding: 8px;
             border-radius: 6px;
         } 
@@ -361,7 +520,15 @@
             margin: auto; /* Garante compatibilidade de centralização */
         }
         .close-button { color: #E09F41; float: right; font-size: 30px; font-weight: bold; position: absolute; top: 10px; right: 20px; }
-        #modal-title { color: #000000; }
+        #modal-title { color: #000000; display: none; }
+        #pedido-id { 
+            position: absolute; 
+            top: 10px; 
+            right: 50px; 
+            color: #7FB1C8; 
+            font-weight: bold; 
+            font-size: 1.4em;
+        }
         #modal-details { color: #000000; }
         #modal-details strong { color: #000000; }
         #modal-details p { color: #000000; margin: 0; }
@@ -369,6 +536,43 @@
         #modal-details .detail-group { margin-bottom: 16px; }
         #modal-details .detail-group:last-of-type { margin-bottom: 0; }
         #modal-details pre { white-space: pre-wrap; background-color: white; padding: 10px; border-radius: 4px; border: 1px solid #7FB1C8; color: #000000; margin-top: 8px; }
+        
+        /* Sistema de Abas */
+        .tabs-container {
+            margin-top: 10px;
+        }
+        .tabs-header {
+            display: flex;
+            gap: 5px;
+            border-bottom: 2px solid #7FB1C8;
+            margin-bottom: 15px;
+        }
+        .tab-button {
+            padding: 10px 20px;
+            border: none;
+            background-color: transparent;
+            color: #1A2B0F;
+            font-family: 'Basic Choice 2', 'Roboto', sans-serif;
+            font-size: 0.9em;
+            font-weight: bold;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        .tab-button:hover {
+            background-color: rgba(127, 181, 200, 0.1);
+        }
+        .tab-button.active {
+            color: #7FB1C8;
+            border-bottom-color: #E09F41;
+        }
+        .tab-pane {
+            display: none;
+            padding: 10px 0;
+        }
+        .tab-pane.active {
+            display: block;
+        }
         
         /* Inputs e Botões de Edição (Estilo Favou) */
         #edit-form input, #edit-form textarea, #edit-form select {
@@ -386,10 +590,21 @@
              background-color: #eee; /* Cor de fundo para campo não editável */
              cursor: not-allowed;
         }
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-top: 15px;
+            width: 100%;
+            padding-right: 0;
+        }
+        #edit-button {
+            margin-left: auto;
+        }
         .modal-actions button, #edit-form button {
             font-family: 'Basic Choice 2', 'Roboto', sans-serif;
             padding: 12px 20px;
-            margin-top: 15px;
+            margin-top: 0;
             border: none;
             border-radius: 20px; 
             cursor: pointer;
@@ -401,8 +616,8 @@
 
         /* Cores dos Botões de Ação */
         #edit-button { background-color: #2ecc71; box-shadow: 0 4px #1c8d50; } 
-        #edit-form button[type="submit"] { background-color: #A5D6A7; box-shadow: 0 4px #81C784; } 
-        #cancel-edit { background-color: #EF9A9A; box-shadow: 0 4px #E57373; } 
+        #edit-form button[type="submit"] { background-color: #2ecc71; box-shadow: 0 4px #1c8d50; } 
+        #cancel-edit { background-color: #e74c3c; box-shadow: 0 4px #c0392b; } 
         #open-calculator-button { background-color: #7FB1C8; box-shadow: 0 4px #4c7e93; margin-right: 10px; margin-bottom: 10px; border-radius: 20px; }
         
         #resumo-editor-section { padding: 10px; background-color: #F4E6CB; border-radius: 8px; margin-top: 10px; border: 1px solid #7FB1C8; }
@@ -467,7 +682,7 @@
 <body>
 
     <header>
-        <h1>PEDIDOS FAVU COZINHA AFETIVA</h1>
+        <h1><span class="title-line1">Pedidos</span><span class="title-line2">Favu cozinha afetiva</span></h1>
         <div class="controls">
              <div id="dashboard-totals">
                  <strong>R$ 0,00</strong>
@@ -479,7 +694,7 @@
     <div class="filter-bar">
         <div class="search-filter">
             <label for="search-filter">Buscar:</label>
-            <input type="text" id="search-filter" placeholder="ID do pedido ou nome do cliente" value="">
+            <input type="text" id="search-filter" placeholder="ID do pedido, nome ou número do cliente" value="">
         </div>
         <div class="date-filter">
             <label for="date-filter">Data de Entrega:</label>
@@ -511,7 +726,7 @@
     <div id="modal" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="closeModal()">&times;</span>
-            <h2 id="modal-title"><span id="pedido-id"></span></h2>
+            <span id="pedido-id"></span>
             
             <div id="modal-details">
                 <div class="detail-group">
@@ -534,9 +749,27 @@
                 <p><strong>Total Final:</strong> <span id="detail-total-final"></span></p>
                 </div>
                 
+                <!-- Sistema de Abas -->
                 <div class="detail-group">
-                    <strong>Resumo do pedido:</strong> 
+                    <div class="tabs-container">
+                        <div class="tabs-header">
+                            <button class="tab-button active" onclick="switchTab('resumo-pedidos')">Resumo de Pedidos</button>
+                            <button class="tab-button" onclick="switchTab('custos')">Custos</button>
+                            <button class="tab-button" onclick="switchTab('resumo')">Resumo</button>
+                        </div>
+                        <div class="tabs-content">
+                            <div id="tab-resumo-pedidos" class="tab-pane active">
+                                <strong>Resumo do pedido:</strong> 
                 <pre id="detail-resumo-itens"></pre>
+                            </div>
+                            <div id="tab-custos" class="tab-pane">
+                                <p>Conteúdo de Custos será implementado aqui.</p>
+                            </div>
+                            <div id="tab-resumo" class="tab-pane">
+                                <p>Conteúdo de Resumo será implementado aqui.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -585,8 +818,8 @@
                 </div>
 
                 <div style="display: flex; gap: 10px;">
-                    <button type="submit" style="flex-grow: 1;">Salvar Edição</button>
                     <button type="button" id="cancel-edit" style="flex-grow: 1;">Cancelar Edição</button>
+                    <button type="submit" style="flex-grow: 1;">Salvar Edição</button>
                 </div>
             </form>
         </div>
@@ -777,6 +1010,111 @@
 
             return fullResumo;
         }
+
+        /**
+         * Processa os itens de um pedido e organiza por categoria
+         */
+        function processarItensPorCategoria(resumo) {
+            const itensPorCategoria = {
+                'Bolos Tradicionais': [],
+                'Bolos Especiais': [],
+                'Doces': [],
+                'Cookies': [],
+                'Salgados Fritos': [],
+                'Salgados Assados': [],
+                'Salgados Vegetarianos': [],
+                'Pratos Salgados': []
+            };
+            
+            if (!resumo || resumo === 'N/A') return itensPorCategoria;
+            
+            const linhas = resumo.split('\n');
+            let categoriaAtual = '';
+            
+            linhas.forEach(linha => {
+                linha = linha.trim();
+                if (!linha) return;
+                
+                // Detecta categoria
+                if (linha.toLowerCase().includes('bolos tradicionais')) {
+                    categoriaAtual = 'Bolos Tradicionais';
+                    return;
+                } else if (linha.toLowerCase().includes('bolos especiais')) {
+                    categoriaAtual = 'Bolos Especiais';
+                    return;
+                } else if (linha.toLowerCase().includes('doces') && !linha.toLowerCase().includes('doce')) {
+                    categoriaAtual = 'Doces';
+                    return;
+                } else if (linha.toLowerCase().includes('cookies')) {
+                    categoriaAtual = 'Cookies';
+                    return;
+                } else if (linha.toLowerCase().includes('salgados fritos')) {
+                    categoriaAtual = 'Salgados Fritos';
+                    return;
+                } else if (linha.toLowerCase().includes('salgados assados')) {
+                    categoriaAtual = 'Salgados Assados';
+                    return;
+                } else if (linha.toLowerCase().includes('salgados vegetarianos')) {
+                    categoriaAtual = 'Salgados Vegetarianos';
+                    return;
+                } else if (linha.toLowerCase().includes('pratos salgados')) {
+                    categoriaAtual = 'Pratos Salgados';
+                    return;
+                }
+                
+                // Se não tem categoria ou não é uma linha de item, pula
+                if (!categoriaAtual || !linha.includes('=')) return;
+                
+                let nomeItem = '';
+                let tamanhoPeso = '';
+                let qtd = 0;
+                let itemFormatado = '';
+                
+                // Padrão 1: Bolos com tamanho "Nome - Tamanho (Peso KG) - Qtd unidades"
+                let match = linha.match(/(.+?)\s*-\s*([PMG])\s*\(([\d.]+)\s*KG\)\s*-\s*(\d+)\s*unidades/i);
+                if (match) {
+                    nomeItem = match[1].trim();
+                    const tamanho = match[2];
+                    const peso = match[3];
+                    qtd = parseInt(match[4]);
+                    tamanhoPeso = `${tamanho} (${peso} KG)`;
+                    itemFormatado = `${qtd} un. - ${nomeItem} - ${tamanhoPeso}`;
+                } else {
+                    // Padrão 2: Cheesecake "Nome - Peso KG - Qtd unidades"
+                    match = linha.match(/(.+?)\s*-\s*([\d.]+)\s*KG\s*-\s*(\d+)\s*unidades/i);
+                    if (match) {
+                        nomeItem = match[1].trim();
+                        const peso = match[2];
+                        qtd = parseInt(match[3]);
+                        tamanhoPeso = `${peso} KG`;
+                        itemFormatado = `${qtd} un. - ${nomeItem} (${tamanhoPeso})`;
+                    } else {
+                        // Padrão 3: Doces/Salgados "Nome - Qtd unidades"
+                        match = linha.match(/(\*?)(.+?)\s*-\s*(\d+)\s*unidades/i);
+                        if (match) {
+                            const asterisco = match[1];
+                            nomeItem = (asterisco + match[2]).trim();
+                            qtd = parseInt(match[3]);
+                            itemFormatado = `${qtd} un. - ${nomeItem}`;
+                        } else {
+                            // Padrão 4: Fallback genérico "Nome - Qtd un."
+                            match = linha.match(/(.+?)\s*-\s*(\d+)\s*un\./i);
+                            if (match) {
+                                nomeItem = match[1].trim();
+                                qtd = parseInt(match[2]);
+                                itemFormatado = `${qtd} un. - ${nomeItem}`;
+                            }
+                        }
+                    }
+                }
+                
+                if (itemFormatado && qtd > 0 && categoriaAtual) {
+                    itensPorCategoria[categoriaAtual].push(itemFormatado);
+                }
+            });
+            
+            return itensPorCategoria;
+        }
         
         // =========================================================================
         // FUNÇÕES DE COMUNICAÇÃO E RENDERIZAÇÃO
@@ -917,9 +1255,12 @@
                 const column = document.createElement('div');
                 column.className = 'kanban-column';
                 column.dataset.status = status; 
+                // No mobile, desabilita drag and drop
+                if (window.innerWidth > 768) {
                 column.addEventListener('dragover', dragOver);
                 column.addEventListener('drop', drop);
                 column.addEventListener('dragleave', dragLeave);
+                }
 
                 const header = document.createElement('div');
                 header.className = 'column-header';
@@ -930,12 +1271,13 @@
                     const statusMatch = statusEquals(statusPedido, status);
                     if (!statusMatch) return false;
 
-                    // Filtro de busca (apenas ID e nome)
+                    // Filtro de busca (ID, nome e número do cliente)
                     if (searchValue) {
                         const idMatch = (p.ID_do_Pedido || '').toLowerCase().includes(searchValue);
                         const nomeMatch = (p.Nome_Cliente || '').toLowerCase().includes(searchValue);
+                        const numeroMatch = (p.Numero || '').toLowerCase().includes(searchValue);
                         
-                        if (!idMatch && !nomeMatch) {
+                        if (!idMatch && !nomeMatch && !numeroMatch) {
                             return false;
                         }
                     }
@@ -977,12 +1319,41 @@
 
                 pedidosVisiveis.push(...pedidosNaColuna);
                 header.textContent = `${status} (${pedidosNaColuna.length})`;
+                
+                // Adiciona funcionalidade de collapse no mobile
+                if (window.innerWidth <= 768) {
+                    // Por padrão, apenas a primeira coluna está aberta
+                    const isFirstColumn = KANBAN_STATUSES.indexOf(status) === 0;
+                    if (!isFirstColumn) {
+                        column.classList.add('collapsed');
+                        header.classList.add('collapsed');
+                    }
+                    
+                    header.addEventListener('click', () => {
+                        // Fecha todas as outras colunas
+                        document.querySelectorAll('.kanban-column').forEach(col => {
+                            if (col !== column) {
+                                col.classList.add('collapsed');
+                                col.querySelector('.column-header').classList.add('collapsed');
+                            }
+                        });
+                        // Toggle da coluna atual
+                        column.classList.toggle('collapsed');
+                        header.classList.toggle('collapsed');
+                    });
+                }
+                
                 column.appendChild(header);
 
+                // Cria container para os cards (para animação de collapse)
+                const columnContent = document.createElement('div');
+                columnContent.className = 'column-content';
+                
                 pedidosNaColuna.forEach(pedido => {
-                    column.appendChild(createPedidoCard(pedido));
+                    columnContent.appendChild(createPedidoCard(pedido));
                 });
-
+                
+                column.appendChild(columnContent);
                 kanbanBoard.appendChild(column);
             });
             
@@ -1017,7 +1388,10 @@
             const statusAtual = normalizeStatus(pedido.Status_do_Pedido || pedido.Status || 'Pedido Recebido');
             const sanitizedStatus = statusAtual.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').trim('-'); 
 
+            // No mobile, desabilita drag and drop (usa select de status)
+            if (window.innerWidth > 768) {
             card.setAttribute('draggable', true);
+            }
             card.dataset.id = pedido.ID_do_Pedido;
 
             const total = parseFloat(pedido.Total_Final || 0).toFixed(2).replace('.', ',');
@@ -1025,7 +1399,6 @@
             // Usa os campos mapeados no fetchPedidos
             const data = pedido.Data_Entrega || 'N/A'; // DD/MM/AAAA
             const hora = formatTime(pedido.Horario_Entrega || '00:00'); 
-            const dataHora = `${data} às ${hora}`;
 
             const nomeCliente = pedido.Nome_Cliente || 'N/A';
             const statusPagamento = pedido.Status_Pagamento || 'Pendente';
@@ -1043,11 +1416,25 @@
             // Define as classes do card (status do pedido)
             card.className = `pedido-card status-${sanitizedStatus}`;
 
+            // Cria opções do select de status de etapa
+            const statusOptions = KANBAN_STATUSES.map(s => 
+                `<option value="${s}" ${statusEquals(statusAtual, s) ? 'selected' : ''}>${s}</option>`
+            ).join('');
+
             card.innerHTML = `
+                <input type="checkbox" class="card-checkbox" data-pedido-id="${pedido.ID_do_Pedido}" onchange="toggleTicketSelection(this)">
+                <br>
                 <div class="card-id">${pedido.ID_do_Pedido}</div>
                 <div class="card-title">${nomeCliente}</div>
-                <div class="card-detail"><strong>Data e horário da entrega:</strong> ${dataHora}</div>
+                <div class="card-detail"><strong>Data de entrega:</strong> ${data}</div>
+                <div class="card-detail"><strong>Horário de entrega:</strong> ${hora}</div>
                 <div class="card-detail"><strong>Total do valor:</strong> R$ ${total}</div>
+                <div class="card-status-etapa">
+                    <label>Status da Etapa:</label>
+                    <select class="status-etapa-select" data-pedido-id="${pedido.ID_do_Pedido}" onchange="atualizarStatusEtapaMobile(this)">
+                        ${statusOptions}
+                    </select>
+                </div>
                 <div class="card-status-pagamento ${classePagamento}">
                     <label>Status do Pagamento:</label>
                     <select class="status-pagamento-select" data-pedido-id="${pedido.ID_do_Pedido}" onchange="atualizarStatusPagamento(this)">
@@ -1061,8 +1448,8 @@
             card.addEventListener('dragstart', dragStart);
             // Corrige o conflito de clique/drag:
             card.addEventListener('click', (e) => {
-                 // Não abre o modal se clicar no select
-                 if (e.target.tagName !== 'SELECT' && e.target.tagName !== 'LABEL') {
+                 // Não abre o modal se clicar no select, label ou checkbox
+                 if (e.target.tagName !== 'SELECT' && e.target.tagName !== 'LABEL' && e.target.tagName !== 'INPUT' && !e.target.closest('.card-status-etapa') && !e.target.closest('.card-status-pagamento') && !e.target.closest('.card-checkbox')) {
                  e.stopPropagation(); 
                  showModal(pedido.ID_do_Pedido);
                  }
@@ -1075,6 +1462,18 @@
                     e.stopPropagation();
                 });
                 selectElement.addEventListener('dragstart', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+            }
+
+            // Previne que o select de status de etapa interfira no drag and drop
+            const selectEtapaElement = card.querySelector('.status-etapa-select');
+            if (selectEtapaElement) {
+                selectEtapaElement.addEventListener('mousedown', (e) => {
+                    e.stopPropagation();
+                });
+                selectEtapaElement.addEventListener('dragstart', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
                 });
@@ -1229,6 +1628,16 @@
             
             addToQueue(formData); // Adiciona à fila e processa
         }
+
+        // Função para atualizar status de etapa via select no mobile
+        async function atualizarStatusEtapaMobile(selectElement) {
+            const pedidoId = selectElement.dataset.pedidoId;
+            const novoStatus = String(selectElement.value).trim();
+            const statusNormalizado = normalizeStatus(novoStatus);
+            
+            // Usa a mesma lógica do updatePedidoStatus
+            await updatePedidoStatus(pedidoId, statusNormalizado);
+        }
         
         // MODAL FUNCTIONS
         const modal = document.getElementById('modal');
@@ -1258,7 +1667,7 @@
             const cupom = pedido.Cupom || 'N/A';
             const statusPagamento = pedido.Status_Pagamento || 'PENDENTE';
             
-            document.getElementById('modal-title').innerHTML = `<span id="pedido-id">${id}</span>`;
+            document.getElementById('pedido-id').textContent = id;
             document.getElementById('detail-nome').textContent = nomeCliente;
             // Sincronização do Modal - usa o campo correto pedido.Numero
             document.getElementById('detail-numero').textContent = pedido.Numero || 'N/A';
@@ -1272,7 +1681,7 @@
 
             // Preenche o formulário de edição usando os campos mapeados
             document.getElementById('edit-nome').value = nomeCliente;
-            document.getElementById('edit-numero').value = numero;
+            document.getElementById('edit-numero').value = pedido.Numero || '';
             document.getElementById('edit-data').value = pedido.Data_Entrega || ''; // DD/MM/AAAA - usa campo mapeado
             document.getElementById('edit-horario').value = formatTime(pedido.Horario_Entrega || '00:00'); // HH:MM - usa campo mapeado
             document.getElementById('edit-pagamento').value = pedido.Forma_de_Pagamento || pedido.Forma_Pagamento || 'Pix';
@@ -1287,6 +1696,8 @@
             document.getElementById('modal-details').style.display = 'block';
             document.querySelector('.modal-actions').style.display = 'block';
             editForm.style.display = 'none';
+            // Ativa a aba padrão "Resumo de Pedidos"
+            switchTab('resumo-pedidos');
         }
 
         function closeModal() {
@@ -1295,6 +1706,22 @@
             document.getElementById('modal-details').style.display = 'block';
             document.querySelector('.modal-actions').style.display = 'block';
             editForm.style.display = 'none';
+            // Reseta para a aba padrão ao fechar
+            switchTab('resumo-pedidos');
+        }
+
+        // Função para alternar entre as abas
+        function switchTab(tabName) {
+            // Remove active de todos os botões e painéis
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+            
+            // Ativa o botão e painel selecionados
+            const button = document.querySelector(`.tab-button[onclick="switchTab('${tabName}')"]`);
+            const pane = document.getElementById(`tab-${tabName}`);
+            
+            if (button) button.classList.add('active');
+            if (pane) pane.classList.add('active');
         }
 
         document.getElementById('edit-button').addEventListener('click', () => {
@@ -1334,17 +1761,13 @@
         }
         
         async function updatePedidoData() {
-            // Define trava de atualização
-            isUpdating = true;
-            
-            const formData = new URLSearchParams();
-            formData.append('action', 'updateData');
-            
             // Pega os dados do formulário de edição
             // Status do Pedido não é editável - mantém o valor atual do pedido
             const statusToSheet = pedidoSendoEditado.Status_do_Pedido || pedidoSendoEditado.Status || 'Pedido Recebido';
             const dataToSheet = document.getElementById('edit-data').value; // DD/MM/AAAA
-            const horaToSheet = document.getElementById('edit-horario').value; // HH:MM
+            // Garante que o horário esteja sempre no formato HH:MM
+            const horaInput = document.getElementById('edit-horario').value; // Input type="time" retorna HH:MM
+            const horaToSheet = formatTime(horaInput) !== 'N/A' ? formatTime(horaInput) : horaInput || '00:00';
             const nomeToSheet = document.getElementById('edit-nome').value;
             const numeroToSheet = document.getElementById('edit-numero').value;
             const totalToSheet = document.getElementById('edit-total').value; 
@@ -1355,8 +1778,29 @@
             // O Resumo é pego da variável original (já que é readonly)
             const resumoToSheet = pedidoSendoEditado.Resumo_dos_Itens || pedidoSendoEditado.Resumo_dos_Itens || ''; 
 
-            // Envia no formato que o Apps Script espera (usando os nomes exatos das colunas da planilha)
-            // Ordem: action, id, e depois todos os campos da planilha
+            // 1. LÓGICA OTIMISTA - Atualiza o pedido local imediatamente
+            const pedido = todosOsPedidos.find(p => p.ID_do_Pedido === pedidoSendoEditado.ID_do_Pedido);
+            if (pedido) {
+                pedido.Nome_Cliente = nomeToSheet;
+                pedido.Numero = String(numeroToSheet || '');
+                pedido.Data_Entrega = String(dataToSheet || '');
+                pedido.Horario_Entrega = horaToSheet;
+                pedido.Total_Final = totalToSheet;
+                pedido.Forma_de_Pagamento = pagamentoToSheet;
+                pedido.Status_Pagamento = statusPagamentoToSheet;
+                pedido.Cupom = cupomToSheet;
+                pedido.Status_do_Pedido = statusToSheet;
+                pedido.Status = statusToSheet;
+            }
+            
+            // 2. Re-renderiza imediatamente
+            renderKanban();
+            showToast('Salvo!');
+            closeModal();
+            
+            // 3. Prepara os dados para envio à planilha
+            const formData = new URLSearchParams();
+            formData.append('action', 'updateData');
             formData.append('id', pedidoSendoEditado.ID_do_Pedido);
             formData.append('Nome_Cliente', nomeToSheet);
             formData.append('Numero', String(numeroToSheet || '')); // Garante String
@@ -1367,50 +1811,10 @@
             formData.append('Status_Pagamento', statusPagamentoToSheet);
             formData.append('Cupom', cupomToSheet);
             formData.append('Resumo_dos_Itens', resumoToSheet); 
-            formData.append('Status_do_Pedido', statusToSheet); 
-
-            try {
-                // Usa mode: 'no-cors' para evitar erros de pré-verificação com Google Apps Script
-                await fetch(API_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: formData
-                });
-                
-                // Atualiza o pedido local antes de recarregar
-                const pedido = todosOsPedidos.find(p => p.ID_do_Pedido === pedidoSendoEditado.ID_do_Pedido);
-                if (pedido) {
-                    pedido.Nome_Cliente = nomeToSheet;
-                    pedido.Numero = String(numeroToSheet || '');
-                    pedido.Data_Entrega = String(dataToSheet || '');
-                    pedido.Horario_Entrega = horaToSheet;
-                    pedido.Total_Final = totalToSheet;
-                    pedido.Forma_de_Pagamento = pagamentoToSheet;
-                    pedido.Status_Pagamento = statusPagamentoToSheet;
-                    pedido.Cupom = cupomToSheet;
-                    pedido.Status_do_Pedido = statusToSheet;
-                    pedido.Status = statusToSheet;
-                }
-                
-                showToast('Salvo na Planilha');
-                closeModal();
-                
-                // Re-renderiza imediatamente
-                renderKanban();
-                
-                // Libera a trava após tempo de segurança
-                setTimeout(() => {
-                    isUpdating = false;
-                    // Recarrega após liberar a trava para sincronizar
-                    fetchPedidos();
-                }, 2000);
-            } catch (error) {
-                showToast("Erro de rede ao tentar atualizar os dados.", true);
-                // Libera a trava mesmo com erro
-                setTimeout(() => {
-                    isUpdating = false;
-                }, 2000);
-            }
+            formData.append('Status_do_Pedido', statusToSheet);
+            
+            // 4. Adiciona à fila de requisições (em vez de fetch direto)
+            addToQueue(formData);
         }
 
 
@@ -1633,9 +2037,428 @@
             const calculatorModal = document.getElementById('calculator-modal');
             calculatorModal.addEventListener('click', closeCalculatorModal);
              
+            // Inicializa opções do modal de mover
+            const bulkMoveSelect = document.getElementById('bulk-move-status');
+            KANBAN_STATUSES.forEach(status => {
+                const option = document.createElement('option');
+                option.value = status;
+                option.textContent = status;
+                bulkMoveSelect.appendChild(option);
+            });
+             
         });
+
+        // =========================================================================
+        // FUNÇÕES DE SELEÇÃO MÚLTIPLA E AÇÕES EM LOTE
+        // =========================================================================
+        
+        let selectedTickets = new Set();
+        let currentSendType = null;
+
+        function toggleTicketSelection(checkbox) {
+            const pedidoId = checkbox.dataset.pedidoId;
+            const card = checkbox.closest('.pedido-card');
+            
+            if (checkbox.checked) {
+                selectedTickets.add(pedidoId);
+                card.classList.add('selected');
+            } else {
+                selectedTickets.delete(pedidoId);
+                card.classList.remove('selected');
+            }
+            
+            updateBulkActionsBar();
+        }
+
+        function updateBulkActionsBar() {
+            const bar = document.getElementById('bulk-actions-bar');
+            const count = document.getElementById('selected-count');
+            
+            if (selectedTickets.size > 0) {
+                bar.classList.add('show');
+                count.textContent = `${selectedTickets.size} selecionado${selectedTickets.size > 1 ? 's' : ''}`;
+            } else {
+                bar.classList.remove('show');
+            }
+        }
+
+        function clearSelection() {
+            selectedTickets.clear();
+            document.querySelectorAll('.card-checkbox').forEach(cb => {
+                cb.checked = false;
+                cb.closest('.pedido-card').classList.remove('selected');
+            });
+            updateBulkActionsBar();
+        }
+
+        function showBulkMoveModal() {
+            document.getElementById('bulk-move-modal').style.display = 'flex';
+        }
+
+        function closeBulkMoveModal() {
+            document.getElementById('bulk-move-modal').style.display = 'none';
+        }
+
+        function showBulkPaymentModal() {
+            document.getElementById('bulk-payment-modal').style.display = 'flex';
+        }
+
+        function closeBulkPaymentModal() {
+            document.getElementById('bulk-payment-modal').style.display = 'none';
+        }
+
+        function showBulkSendModal() {
+            document.getElementById('bulk-send-modal').style.display = 'flex';
+            document.getElementById('send-destiny').style.display = 'none';
+            currentSendType = null;
+        }
+
+        function closeBulkSendModal() {
+            document.getElementById('bulk-send-modal').style.display = 'none';
+            document.getElementById('send-destiny').style.display = 'none';
+            currentSendType = null;
+        }
+
+        function selectSendType(type) {
+            currentSendType = type;
+            document.getElementById('send-destiny').style.display = 'block';
+        }
+
+        async function executeBulkMove() {
+            const newStatus = document.getElementById('bulk-move-status').value;
+            if (!newStatus) {
+                showToast('Selecione uma etapa', true);
+                return;
+            }
+
+            const statusNormalizado = normalizeStatus(newStatus);
+            const promises = Array.from(selectedTickets).map(id => updatePedidoStatus(id, statusNormalizado));
+            
+            await Promise.all(promises);
+            showToast(`${selectedTickets.size} ticket(s) movido(s)!`);
+            clearSelection();
+            closeBulkMoveModal();
+        }
+
+        async function executeBulkPayment() {
+            const newStatus = document.getElementById('bulk-payment-status').value;
+            if (!newStatus) {
+                showToast('Selecione um status', true);
+                return;
+            }
+
+            const promises = Array.from(selectedTickets).map(id => {
+                const pedido = todosOsPedidos.find(p => p.ID_do_Pedido === id);
+                if (pedido) {
+                    pedido.Status_Pagamento = newStatus;
+                    const formData = new URLSearchParams();
+                    formData.append('action', 'updateData');
+                    formData.append('id', id);
+                    formData.append('Status_Pagamento', newStatus);
+                    formData.append('Nome_Cliente', pedido.Nome_Cliente || '');
+                    formData.append('Numero', pedido.Numero || '');
+                    formData.append('Data_Entrega', pedido.Data_Entrega || '');
+                    formData.append('Horario_Entrega', pedido.Horario_Entrega || '');
+                    formData.append('Total_Final', pedido.Total_Final || '');
+                    formData.append('Forma_de_Pagamento', pedido.Forma_de_Pagamento || '');
+                    formData.append('Cupom', pedido.Cupom || '');
+                    formData.append('Resumo_dos_Itens', pedido.Resumo_dos_Itens || '');
+                    formData.append('Status_do_Pedido', pedido.Status_do_Pedido || '');
+                    return addToQueue(formData);
+                }
+            });
+
+            await Promise.all(promises);
+            renderKanban();
+            showToast(`${selectedTickets.size} ticket(s) atualizado(s)!`);
+            clearSelection();
+            closeBulkPaymentModal();
+        }
+
+        function sendToWhatsApp(destiny) {
+            if (!currentSendType) {
+                showToast('Selecione o tipo de encaminhamento primeiro', true);
+                return;
+            }
+
+            const selectedPedidos = Array.from(selectedTickets).map(id => 
+                todosOsPedidos.find(p => p.ID_do_Pedido === id)
+            ).filter(p => p);
+
+            const phoneNumbers = {
+                'Arabela': '558199502865',
+                'Favu': '558199591775'
+            };
+
+            const phone = phoneNumbers[destiny];
+            let message = '';
+
+            if (currentSendType === 'individual') {
+                // Encaminhar individualmente
+                message = `Resumo ${selectedPedidos.length} Pedido(s):\n\n`;
+                
+                selectedPedidos.forEach((pedido, index) => {
+                    if (index > 0) message += '------------------------------------------\n\n';
+                    
+                    message += `*Pedido ${index + 1}*\n\n`;
+                    message += `• ${pedido.Nome_Cliente}\n`;
+                    const horaFormatada = formatTime(pedido.Horario_Entrega || '00:00');
+                    message += `   ⤷ ${pedido.Data_Entrega} às ${horaFormatada}\n`;
+                    message += `   ⤷ ${pedido.ID_do_Pedido}\n\n`;
+                    
+                    // Processa itens por categoria
+                    const resumo = extractResumoItens(pedido.Resumo_dos_Itens || '');
+                    const itensPorCategoria = processarItensPorCategoria(resumo);
+                    
+                    message += `*Itens:*\n\n`;
+                    
+                    // Ordena as categorias e formata
+                    const ordemCategorias = [
+                        'Bolos Tradicionais',
+                        'Bolos Especiais',
+                        'Doces',
+                        'Cookies',
+                        'Salgados Fritos',
+                        'Salgados Assados',
+                        'Salgados Vegetarianos',
+                        'Pratos Salgados'
+                    ];
+                    
+                    ordemCategorias.forEach(categoria => {
+                        const itens = itensPorCategoria[categoria];
+                        if (itens.length > 0) {
+                            message += `*- ${categoria}*\n`;
+                            itens.forEach(item => {
+                                message += ` ⤷ ${item}\n`;
+                            });
+                            message += `\n`;
+                        }
+                    });
+                });
+            } else {
+                // Encaminhar resumo de itens
+                const itensPorCategoria = {
+                    'Bolos Tradicionais': {},
+                    'Bolos Especiais': {},
+                    'Doces': {},
+                    'Cookies': {},
+                    'Salgados Fritos': {},
+                    'Salgados Assados': {},
+                    'Salgados Vegetarianos': {},
+                    'Pratos Salgados': {}
+                };
+                let totalGeral = 0;
+                
+                selectedPedidos.forEach(pedido => {
+                    // Soma o total de cada pedido
+                    totalGeral += parseFloat(pedido.Total_Final || 0);
+                    
+                    // Extrai o resumo dos itens
+                    const resumo = extractResumoItens(pedido.Resumo_dos_Itens || '');
+                    if (!resumo || resumo === 'N/A') return;
+                    
+                    // Processa o resumo completo para detectar categorias
+                    const linhas = resumo.split('\n');
+                    let categoriaAtual = '';
+                    
+                    linhas.forEach(linha => {
+                        linha = linha.trim();
+                        if (!linha) return;
+                        
+                        // Detecta categoria
+                        if (linha.toLowerCase().includes('bolos tradicionais')) {
+                            categoriaAtual = 'Bolos Tradicionais';
+                            return;
+                        } else if (linha.toLowerCase().includes('bolos especiais')) {
+                            categoriaAtual = 'Bolos Especiais';
+                            return;
+                        } else if (linha.toLowerCase().includes('doces') && !linha.toLowerCase().includes('doce')) {
+                            categoriaAtual = 'Doces';
+                            return;
+                        } else if (linha.toLowerCase().includes('cookies')) {
+                            categoriaAtual = 'Cookies';
+                            return;
+                        } else if (linha.toLowerCase().includes('salgados fritos')) {
+                            categoriaAtual = 'Salgados Fritos';
+                            return;
+                        } else if (linha.toLowerCase().includes('salgados assados')) {
+                            categoriaAtual = 'Salgados Assados';
+                            return;
+                        } else if (linha.toLowerCase().includes('salgados vegetarianos')) {
+                            categoriaAtual = 'Salgados Vegetarianos';
+                            return;
+                        } else if (linha.toLowerCase().includes('pratos salgados')) {
+                            categoriaAtual = 'Pratos Salgados';
+                            return;
+                        }
+                        
+                        // Se não tem categoria ou não é uma linha de item, pula
+                        if (!categoriaAtual || !linha.includes('=')) return;
+                        
+                        let nomeItem = '';
+                        let tamanhoPeso = '';
+                        let qtd = 0;
+                        let chave = '';
+                        
+                        // Padrão 1: Bolos com tamanho "Nome - Tamanho (Peso KG) - Qtd unidades"
+                        let match = linha.match(/(.+?)\s*-\s*([PMG])\s*\(([\d.]+)\s*KG\)\s*-\s*(\d+)\s*unidades/i);
+                        if (match) {
+                            nomeItem = match[1].trim();
+                            const tamanho = match[2];
+                            const peso = match[3];
+                            qtd = parseInt(match[4]);
+                            tamanhoPeso = `${tamanho} (${peso} KG)`;
+                            chave = `${nomeItem} - ${tamanhoPeso}`;
+                        } else {
+                            // Padrão 2: Cheesecake "Nome - Peso KG - Qtd unidades"
+                            match = linha.match(/(.+?)\s*-\s*([\d.]+)\s*KG\s*-\s*(\d+)\s*unidades/i);
+                            if (match) {
+                                nomeItem = match[1].trim();
+                                const peso = match[2];
+                                qtd = parseInt(match[3]);
+                                tamanhoPeso = `${peso} KG`;
+                                chave = `${nomeItem} (${tamanhoPeso})`;
+                            } else {
+                                // Padrão 3: Doces/Salgados "Nome - Qtd unidades"
+                                match = linha.match(/(\*?)(.+?)\s*-\s*(\d+)\s*unidades/i);
+                                if (match) {
+                                    const asterisco = match[1];
+                                    nomeItem = (asterisco + match[2]).trim();
+                                    qtd = parseInt(match[3]);
+                                    chave = nomeItem;
+                                } else {
+                                    // Padrão 4: Fallback genérico "Nome - Qtd un."
+                                    match = linha.match(/(.+?)\s*-\s*(\d+)\s*un\./i);
+                                    if (match) {
+                                        nomeItem = match[1].trim();
+                                        qtd = parseInt(match[2]);
+                                        chave = nomeItem;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        if (chave && qtd > 0 && categoriaAtual) {
+                            if (itensPorCategoria[categoriaAtual][chave]) {
+                                itensPorCategoria[categoriaAtual][chave] += qtd;
+                            } else {
+                                itensPorCategoria[categoriaAtual][chave] = qtd;
+                            }
+                        }
+                    });
+                });
+
+                // Monta a mensagem
+                message = `Resumo ${selectedPedidos.length} Pedido(s):\n\n`;
+                message += `*- Clientes:*\n\n`;
+                selectedPedidos.forEach(p => {
+                    const horaFormatada = formatTime(p.Horario_Entrega || '00:00');
+                    message += `• ${p.Nome_Cliente}\n`;
+                    message += `   ⤷ ${p.Data_Entrega} às ${horaFormatada}\n`;
+                    message += `   ⤷ ${p.ID_do_Pedido}\n\n`;
+                });
+                message += `*- Itens:*\n\n`;
+                
+                // Ordena as categorias e formata
+                const ordemCategorias = [
+                    'Bolos Tradicionais',
+                    'Bolos Especiais',
+                    'Doces',
+                    'Cookies',
+                    'Salgados Fritos',
+                    'Salgados Assados',
+                    'Salgados Vegetarianos',
+                    'Pratos Salgados'
+                ];
+                
+                ordemCategorias.forEach(categoria => {
+                    const itens = itensPorCategoria[categoria];
+                    const itensKeys = Object.keys(itens);
+                    
+                    if (itensKeys.length > 0) {
+                        message += `*- ${categoria}*\n`;
+                        itensKeys.sort().forEach(item => {
+                            const quantidade = itens[item];
+                            message += `${quantidade} un. - ${item}\n`;
+                        });
+                        message += `\n`;
+                    }
+                });
+                
+                message += `Total Geral: R$ ${totalGeral.toFixed(2).replace('.', ',')}`;
+            }
+
+            const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+            window.open(url, '_blank');
+            
+            showToast(`Encaminhando para ${destiny}...`);
+            closeBulkSendModal();
+            clearSelection();
+        }
     </script>
     
+    <!-- Barra de Ações em Lote -->
+    <div id="bulk-actions-bar">
+        <span id="selected-count">0 selecionados</span>
+        <button id="bulk-move-btn" onclick="showBulkMoveModal()">Etapa</button>
+        <button id="bulk-payment-btn" onclick="showBulkPaymentModal()">Pagamento</button>
+        <button id="bulk-send-btn" onclick="showBulkSendModal()">Encaminhar</button>
+        <button onclick="clearSelection()" style="background-color: #e74c3c;">Limpar Seleção</button>
+    </div>
+
+    <!-- Modal Mover Para -->
+    <div id="bulk-move-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeBulkMoveModal()">&times;</span>
+            <h2>Mover Tickets Selecionados</h2>
+            <p>Selecione a etapa para mover os tickets:</p>
+            <select id="bulk-move-status" style="width: 100%; padding: 10px; margin: 10px 0; border-radius: 8px;">
+                <option value="">Selecione uma etapa...</option>
+            </select>
+            <div class="modal-actions">
+                <button onclick="executeBulkMove()" style="background-color: #2ecc71;">Confirmar</button>
+                <button onclick="closeBulkMoveModal()" style="background-color: #e74c3c;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Status de Pagamento -->
+    <div id="bulk-payment-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeBulkPaymentModal()">&times;</span>
+            <h2>Atualizar Status de Pagamento</h2>
+            <p>Selecione o status de pagamento para os tickets:</p>
+            <select id="bulk-payment-status" style="width: 100%; padding: 10px; margin: 10px 0; border-radius: 8px;">
+                <option value="Pendente">Pendente</option>
+                <option value="Pago 50%">Pago 50%</option>
+                <option value="Pago 100%">Pago 100%</option>
+            </select>
+            <div class="modal-actions">
+                <button onclick="executeBulkPayment()" style="background-color: #2ecc71;">Confirmar</button>
+                <button onclick="closeBulkPaymentModal()" style="background-color: #e74c3c;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Encaminhar -->
+    <div id="bulk-send-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeBulkSendModal()">&times;</span>
+            <h2>Encaminhar Tickets</h2>
+            <p>Escolha o tipo de encaminhamento:</p>
+            <button onclick="selectSendType('individual')" style="width: 100%; padding: 15px; margin: 10px 0; background-color: #7FB1C8;">Encaminhar Individualmente</button>
+            <button onclick="selectSendType('resumo')" style="width: 100%; padding: 15px; margin: 10px 0; background-color: #E09F41;">Encaminhar Resumo de Itens</button>
+            <div id="send-destiny" style="display: none; margin-top: 20px;">
+                <p>Escolha o destinatário:</p>
+                <button onclick="sendToWhatsApp('Arabela')" style="width: 100%; padding: 15px; margin: 10px 0; background-color: #2ecc71;">Arabela (558199502865)</button>
+                <button onclick="sendToWhatsApp('Favu')" style="width: 100%; padding: 15px; margin: 10px 0; background-color: #2ecc71;">Favu (558199591775)</button>
+            </div>
+            <div class="modal-actions">
+                <button onclick="closeBulkSendModal()" style="background-color: #e74c3c;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notification -->
     <div id="toast"></div>
 </body>

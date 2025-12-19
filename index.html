@@ -65,13 +65,6 @@
             appearance: none; -webkit-appearance: none; -moz-appearance: none; 
         }
         
-        #refresh-button { 
-            background-color: #E09F41; /* Laranja */
-            color: white; 
-            box-shadow: 0 4px #c2883a;
-            border-radius: 20px; 
-        }
-        #refresh-button:active { box-shadow: 0 2px #c2883a; transform: translateY(2px); }
 
         #dashboard-totals { text-align: right; line-height: 1.2; padding-right: 15px; order: 1; }
         #dashboard-totals strong { display: block; font-size: 1.5em; color: #E09F41; }
@@ -81,9 +74,167 @@
             background-color: #F4E6CB; 
             padding: 10px 20px; 
             display: flex; 
-            gap: 10px; 
+            gap: 15px; 
             align-items: center; 
+            flex-wrap: wrap;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .search-filter, .date-filter {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .search-filter input[type="text"] {
+            padding: 8px 12px;
+            border: 1px solid #7FB1C8;
+            border-radius: 10px;
+            font-family: 'Basic Choice 2', 'Roboto', sans-serif;
+            font-size: 14px;
+            color: #1A2B0F;
+            min-width: 300px;
+        }
+        .search-filter input[type="text"]:focus {
+            outline: none;
+            border-color: #E09F41;
+        }
+        .date-filter {
+            position: relative;
+        }
+        .date-filter input[type="date"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+            pointer-events: none;
+        }
+        .date-filter input[type="text"] {
+            padding: 8px 12px;
+            border: 1px solid #7FB1C8;
+            border-radius: 10px;
+            font-family: 'Basic Choice 2', 'Roboto', sans-serif;
+            font-size: 14px;
+            color: #1A2B0F;
+            min-width: 120px;
+            cursor: pointer;
+            background-color: white;
+        }
+        .date-filter input[type="text"]:focus {
+            outline: none;
+            border-color: #E09F41;
+        }
+        
+        /* Modal do Calendário */
+        #date-picker-modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        #date-picker-modal.show {
+            display: flex;
+        }
+        .date-picker-content {
+            background-color: #F4E6CB;
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 350px;
+            width: 90%;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .date-picker-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .date-picker-nav {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: #1A2B0F;
+            padding: 5px 10px;
+        }
+        .date-picker-nav:hover {
+            color: #E09F41;
+        }
+        .date-picker-month-year {
+            font-weight: bold;
+            font-size: 16px;
+            color: #1A2B0F;
+        }
+        .date-picker-calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        .date-picker-weekday {
+            text-align: center;
+            font-weight: bold;
+            font-size: 12px;
+            color: #7FB1C8;
+            padding: 5px;
+        }
+        .date-picker-day {
+            text-align: center;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            background-color: white;
+            color: #1A2B0F;
+            border: 1px solid #ddd;
+        }
+        .date-picker-day:hover {
+            background-color: #E09F41;
+            color: white;
+        }
+        .date-picker-day.selected {
+            background-color: #7FB1C8;
+            color: white;
+            font-weight: bold;
+        }
+        .date-picker-day.other-month {
+            color: #ccc;
+        }
+        .date-picker-day.today {
+            border: 2px solid #E09F41;
+        }
+        .date-picker-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+        }
+        .date-picker-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Basic Choice 2', 'Roboto', sans-serif;
+            font-size: 14px;
+            font-weight: bold;
+            flex: 1;
+        }
+        .date-picker-btn.limpar {
+            background-color: #EF9A9A;
+            color: white;
+        }
+        .date-picker-btn.hoje {
+            background-color: #A5D6A7;
+            color: white;
+        }
+        .date-picker-btn.mes-atual {
+            background-color: #7FB1C8;
+            color: white;
+        }
+        .date-picker-btn:hover {
+            opacity: 0.8;
         }
 
         /* ========================================================================= */
@@ -93,9 +244,32 @@
             display: flex;
             gap: 15px;
             padding: 20px;
-            overflow-x: auto; 
+            overflow-x: scroll; 
+            overflow-y: hidden;
             -webkit-overflow-scrolling: touch; 
             min-height: 80vh;
+            scrollbar-width: auto; /* Firefox */
+            scrollbar-color: #E09F41 #F4E6CB; /* Firefox */
+        }
+        
+        /* Estilização da scrollbar para Chrome, Edge, Safari */
+        #kanban-board::-webkit-scrollbar {
+            height: 12px;
+        }
+        
+        #kanban-board::-webkit-scrollbar-track {
+            background: #F4E6CB;
+            border-radius: 10px;
+        }
+        
+        #kanban-board::-webkit-scrollbar-thumb {
+            background: #E09F41;
+            border-radius: 10px;
+            border: 2px solid #F4E6CB;
+        }
+        
+        #kanban-board::-webkit-scrollbar-thumb:hover {
+            background: #c2883a;
         }
         .kanban-column {
             flex-basis: 300px; 
@@ -129,15 +303,36 @@
         }
 
         /* Cores de Status */
-        .pedido-card { background-color: white; border: 1px solid #ddd; border-left: 5px solid #7FB1C8; border-radius: 6px; padding: 10px; margin-bottom: 10px; cursor: pointer; color: #1A2B0F; }
-        .status-Aberto { border-left-color: #17a2b8; } 
-        .status-Orçado { border-left-color: #E09F41; } 
-        .status-Agendado-50- { border-left-color: #1abc9c; } 
-        .status-Agendado-100- { border-left-color: #2ecc71; } 
-        .status-Entregue-Pendente { border-left-color: #7FB1C8; opacity: 0.8; } 
-        .status-Entregue { border-left-color: #7FB1C8; opacity: 0.8; } 
-        .status-Entregue-Pago { border-left-color: #1A2B0F; opacity: 0.7; } 
+        .pedido-card { background-color: white; border: 1px solid #ddd; border-left: 5px solid #7FB1C8; border-radius: 6px; padding: 10px; margin-bottom: 10px; cursor: pointer; color: #1A2B0F; position: relative; }
+        .card-id { font-size: 0.85em; position: absolute; top: 10px; right: 10px; color: #7FB1C8; font-weight: bold; }
+        .card-title { font-weight: bold; font-size: 1.1em; margin-bottom: 12px; }
+        .card-detail { font-size: 0.9em; margin-bottom: 6px; }
+        .card-status-pagamento { margin-top: 8px; display: flex; align-items: center; gap: 8px; }
+        .card-status-pagamento label { display: inline-block; font-size: 0.85em; font-weight: bold; color: #1A2B0F; margin: 0; white-space: nowrap; }
+        .card-status-pagamento select { flex: 1; padding: 6px; border: 1px solid #7FB1C8; border-radius: 6px; background-color: white; color: #1A2B0F; font-family: 'Basic Choice 2', 'Roboto', sans-serif; font-size: 0.9em; cursor: pointer; }
+        .card-status-pagamento select:focus { outline: none; border-color: #E09F41; }
+        .status-Pedido-Recebido { border-left-color: #17a2b8; } 
+        .status-Pedido-Confirmado { border-left-color: #E09F41; } 
+        .status-Aguardando-Retirada { border-left-color: #1abc9c; } 
+        .status-Entregue { border-left-color: #2ecc71; } 
         .status-Cancelado { border-left-color: #E60000; opacity: 0.6; } 
+        
+        /* Cores de fundo por status de pagamento - apenas na área do status */
+        .card-status-pagamento.pagamento-pendente { 
+            background-color: #FFEBEE; 
+            padding: 8px;
+            border-radius: 6px;
+        }
+        .card-status-pagamento.pagamento-50 { 
+            background-color: #FFF9E6; 
+            padding: 8px;
+            border-radius: 6px;
+        }
+        .card-status-pagamento.pagamento-pago { 
+            background-color: #E8F5E9; 
+            padding: 8px;
+            border-radius: 6px;
+        } 
         
         /* Estilos do Modal */
         .modal { 
@@ -166,8 +361,14 @@
             margin: auto; /* Garante compatibilidade de centralização */
         }
         .close-button { color: #E09F41; float: right; font-size: 30px; font-weight: bold; position: absolute; top: 10px; right: 20px; }
-        #modal-details strong { color: #7FB1C8; }
-        #modal-details pre { white-space: pre-wrap; background-color: white; padding: 10px; border-radius: 4px; border: 1px solid #7FB1C8; color: #1A2B0F; }
+        #modal-title { color: #000000; }
+        #modal-details { color: #000000; }
+        #modal-details strong { color: #000000; }
+        #modal-details p { color: #000000; margin: 0; }
+        #modal-details p span { color: #000000; }
+        #modal-details .detail-group { margin-bottom: 16px; }
+        #modal-details .detail-group:last-of-type { margin-bottom: 0; }
+        #modal-details pre { white-space: pre-wrap; background-color: white; padding: 10px; border-radius: 4px; border: 1px solid #7FB1C8; color: #000000; margin-top: 8px; }
         
         /* Inputs e Botões de Edição (Estilo Favou) */
         #edit-form input, #edit-form textarea, #edit-form select {
@@ -199,9 +400,9 @@
         #edit-form button:active { box-shadow: 0 2px #4c7e93; transform: translateY(2px); }
 
         /* Cores dos Botões de Ação */
-        #edit-button, #edit-form button[type="submit"] { background-color: #2ecc71; box-shadow: 0 4px #1c8d50; } 
-        #delete-button { background-color: #E60000; box-shadow: 0 4px #a00000; } 
-        #cancel-edit { background-color: #E09F41; box-shadow: 0 4px #c2883a; } 
+        #edit-button { background-color: #2ecc71; box-shadow: 0 4px #1c8d50; } 
+        #edit-form button[type="submit"] { background-color: #A5D6A7; box-shadow: 0 4px #81C784; } 
+        #cancel-edit { background-color: #EF9A9A; box-shadow: 0 4px #E57373; } 
         #open-calculator-button { background-color: #7FB1C8; box-shadow: 0 4px #4c7e93; margin-right: 10px; margin-bottom: 10px; border-radius: 20px; }
         
         #resumo-editor-section { padding: 10px; background-color: #F4E6CB; border-radius: 8px; margin-top: 10px; border: 1px solid #7FB1C8; }
@@ -219,6 +420,48 @@
         }
         #calculator-iframe { width: 95%; height: 95%; border: 5px solid #E09F41; border-radius: 15px; background-color: white; }
 
+        /* Toast Notification */
+        #toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #2ecc71;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 2000;
+            display: none;
+            font-weight: bold;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        #toast.show {
+            display: block;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -234,9 +477,32 @@
     </header>
 
     <div class="filter-bar">
-        <button id="refresh-button">Recarregar</button>
-        <label for="month-filter">Mês/Ano de Entrega:</label>
-        <input type="month" id="month-filter" value="">
+        <div class="search-filter">
+            <label for="search-filter">Buscar:</label>
+            <input type="text" id="search-filter" placeholder="ID do pedido ou nome do cliente" value="">
+        </div>
+        <div class="date-filter">
+            <label for="date-filter">Data de Entrega:</label>
+            <input type="date" id="date-filter" value="">
+            <input type="text" id="date-filter-display" readonly placeholder="MM/AAAA">
+        </div>
+    </div>
+
+    <!-- Modal do Calendário -->
+    <div id="date-picker-modal">
+        <div class="date-picker-content">
+            <div class="date-picker-header">
+                <button class="date-picker-nav" id="prev-month">‹</button>
+                <div class="date-picker-month-year" id="month-year-display"></div>
+                <button class="date-picker-nav" id="next-month">›</button>
+            </div>
+            <div class="date-picker-calendar" id="calendar-grid"></div>
+            <div class="date-picker-buttons">
+                <button class="date-picker-btn limpar" id="btn-limpar">Limpar</button>
+                <button class="date-picker-btn hoje" id="btn-hoje">Hoje</button>
+                <button class="date-picker-btn mes-atual" id="btn-mes-atual">Mês Atual</button>
+            </div>
+        </div>
     </div>
 
     <main id="kanban-board">
@@ -245,32 +511,47 @@
     <div id="modal" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="closeModal()">&times;</span>
-            <h2 id="modal-title">Detalhes do Pedido <span id="pedido-id"></span></h2>
+            <h2 id="modal-title"><span id="pedido-id"></span></h2>
             
             <div id="modal-details">
-                <p><strong>Status:</strong> <span id="detail-status"></span></p>
-                <p><strong>Cliente:</strong> <span id="detail-nome"></span></p>
-                <p><strong>Data/Hora de Entrega:</strong> <span id="detail-data-hora"></span></p>
+                <div class="detail-group">
+                    <p><strong>Nome do Cliente:</strong> <span id="detail-nome"></span></p>
+                    <p><strong>Número:</strong> <span id="detail-numero"></span></p>
+                </div>
+                
+                <div class="detail-group">
+                    <p><strong>Data de Entrega:</strong> <span id="detail-data"></span></p>
+                    <p><strong>Horário de Entrega:</strong> <span id="detail-horario"></span></p>
+                </div>
+                
+                <div class="detail-group">
                 <p><strong>Forma de Pagamento:</strong> <span id="detail-pagamento"></span></p>
+                    <p><strong>Status do Pagamento:</strong> <span id="detail-status-pagamento"></span></p>
+                </div>
+                
+                <div class="detail-group">
+                    <p><strong>Cupom:</strong> <span id="detail-cupom"></span></p>
                 <p><strong>Total Final:</strong> <span id="detail-total-final"></span></p>
-                <strong>Resumo dos Itens:</strong> 
+                </div>
+                
+                <div class="detail-group">
+                    <strong>Resumo do pedido:</strong> 
                 <pre id="detail-resumo-itens"></pre>
+                </div>
             </div>
 
             <div class="modal-actions">
                 <button id="edit-button">Editar Pedido</button>
-                <button id="delete-button" class="danger">Excluir Pedido</button>
             </div>
 
             <form id="edit-form" style="display: none;">
                 <h3>Editar Dados do Pedido</h3>
                 
-                <label for="edit-status">Status do Pedido:</label>
-                <select id="edit-status" name="status" required>
-                    </select><br>
-                
                 <label>Nome do Cliente:</label>
                 <input type="text" id="edit-nome" required><br>
+                
+                <label>Número:</label>
+                <input type="text" id="edit-numero" required><br>
                 
                 <label>Data de Entrega (DD/MM/AAAA):</label>
                 <input type="text" id="edit-data" required placeholder="DD/MM/AAAA"><br> 
@@ -285,12 +566,21 @@
                     <option value="Cartão">Cartão</option>
                 </select><br>
 
+                <label for="edit-status-pagamento">Status do Pagamento:</label>
+                <select id="edit-status-pagamento" name="status-pagamento" required>
+                    <option value="Pendente">Pendente</option>
+                    <option value="Pago 50%">Pago 50%</option>
+                    <option value="Pago 100%">Pago 100%</option>
+                </select><br>
+
+                <label>Cupom:</label>
+                <input type="text" id="edit-cupom"><br>
+
                 <label>Total Final (R$):</label>
                 <input type="number" step="0.01" id="edit-total" required><br>
 
                 <label>Resumo dos Itens (NÃO EDITÁVEL):</label>
                 <div id="resumo-editor-section">
-                    <button type="button" id="open-calculator-button" onclick="openCalculatorModal()">Gerar Resumo por Itens</button>
                     <textarea id="edit-resumo" rows="8" readonly required></textarea> 
                 </div>
 
@@ -314,23 +604,39 @@
         // JAVASCRIPT (LÓGICA)
         // =========================================================================
 
-        const API_URL = 'https://script.google.com/macros/s/AKfycbzPg0luc_LKOhkOLrefXv202qDAHMHFHO_19WF4dtXoc_20MwykJzNI5IRuYlq0Rr5s/exec'; 
+        const API_URL = 'https://script.google.com/macros/s/AKfycbySznszHzGE20MWh8DFmYZfywgtih8_JojKwX9vZXOypxJ6BMFVLMey1ZF9sOoX_QKAXQ/exec'; 
         const CALCULATOR_URL = 'https://favucozinha.github.io/Calculadora-Favu/'; 
 
         // ARRAY FINAL DE STATUS
         const KANBAN_STATUSES = [
-            'Aberto',
-            'Orçado',
-            'Agendado - 50%',
-            'Agendado - 100%',
+            'Pedido Recebido',
+            'Pedido Confirmado',
+            'Aguardando Retirada',
             'Entregue', 
-            'Entregue - Pendente',
-            'Entregue - Pago',
             'Cancelado'
         ];
 
+        // Função helper para normalizar status (case-insensitive)
+        // Converte para o formato padrão: primeira letra maiúscula, resto minúscula
+        function normalizeStatus(status) {
+            if (!status) return '';
+            // Converte para minúsculas e depois capitaliza cada palavra
+            return status.toLowerCase()
+                .split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+        }
+
+        // Função helper para comparar status (case-insensitive)
+        function statusEquals(status1, status2) {
+            return normalizeStatus(status1) === normalizeStatus(status2);
+        }
+
         let todosOsPedidos = [];
         let pedidoSendoEditado = null;
+        let isUpdating = false; // Trava de atualização para evitar conflitos durante operações
+        let requestQueue = []; // Fila de requisições para processar sequencialmente
+        let isProcessingQueue = false; // Indica se a fila está sendo processada
         
         // =========================================================================
         // FUNÇÕES DE UTILIDADE E CORREÇÃO DE DATA/HORA
@@ -362,14 +668,88 @@
         }
 
         /**
+         * Converte data ISO (2025-12-25T08:00:00.000Z) para DD/MM/YYYY (25/12/2025)
+         */
+        function formatISOtoDDMMYYYY(dateValue) {
+            if (!dateValue) return '';
+            
+            try {
+                // Se for string ISO, converte para Date
+                let dateObj;
+                if (typeof dateValue === 'string' && dateValue.includes('T')) {
+                    dateObj = new Date(dateValue);
+                } else if (dateValue instanceof Date) {
+                    dateObj = dateValue;
+                } else {
+                    return String(dateValue);
+                }
+                
+                // Verifica se a data é válida
+                if (isNaN(dateObj.getTime())) {
+                    return String(dateValue);
+                }
+                
+                // Formata para DD/MM/YYYY
+                const day = String(dateObj.getDate()).padStart(2, '0');
+                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const year = dateObj.getFullYear();
+                
+                return `${day}/${month}/${year}`;
+            } catch (e) {
+                console.warn('Erro ao converter data ISO:', dateValue, e);
+                return String(dateValue);
+            }
+        }
+
+        /**
          * Converte string DD/MM/AAAA para YYYY-MM-DD (para fins de filtro e Date Object).
+         * Melhorada para lidar com diferentes formatos e tipos de dados.
          */
         function formatDDMMYYYYtoYYYYMMDD(dateString) {
             if (!dateString) return null;
-            const parts = String(dateString).split('/');
-            if (parts.length === 3) {
-                return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            
+            // Converte para string e remove espaços
+            let dateStr = String(dateString).trim();
+            
+            // Se for um objeto Date, converte para string DD/MM/YYYY
+            if (dateString instanceof Date) {
+                const day = String(dateString.getDate()).padStart(2, '0');
+                const month = String(dateString.getMonth() + 1).padStart(2, '0');
+                const year = dateString.getFullYear();
+                dateStr = `${day}/${month}/${year}`;
             }
+            
+            // Tenta diferentes separadores
+            let parts = [];
+            if (dateStr.includes('/')) {
+                parts = dateStr.split('/');
+            } else if (dateStr.includes('-')) {
+                parts = dateStr.split('-');
+                // Se estiver no formato YYYY-MM-DD, inverte para DD/MM/YYYY
+                if (parts[0].length === 4) {
+                    parts = [parts[2], parts[1], parts[0]];
+                }
+            } else {
+                console.warn('Formato de data inválido:', dateString);
+                return null;
+            }
+            
+            if (parts.length === 3) {
+                // Normaliza os valores (remove zeros à esquerda para comparação, mas mantém para formato)
+                const day = parts[0].padStart(2, '0');
+                const month = parts[1].padStart(2, '0');
+                const year = parts[2];
+                
+                // Valida se são números válidos
+                if (isNaN(day) || isNaN(month) || isNaN(year)) {
+                    console.warn('Data contém valores não numéricos:', dateString);
+                    return null;
+                }
+                
+                return `${year}-${month}-${day}`;
+            }
+            
+            console.warn('Formato de data inválido (não conseguiu dividir em 3 partes):', dateString);
             return null;
         }
 
@@ -403,38 +783,106 @@
         // =========================================================================
 
         async function fetchPedidos() {
-            document.getElementById('refresh-button').textContent = 'Carregando...';
-            document.getElementById('refresh-button').disabled = true;
+            // Não atualiza se estiver em operação (drag & drop, edição, etc) ou processando fila
+            if (isUpdating || isProcessingQueue) {
+                return;
+            }
+            
             document.getElementById('total-pedidos').textContent = '...';
 
             try {
                 const response = await fetch(`${API_URL}?action=read`);
                 const json = await response.json();
+                
+                // Log de depuração
+                console.log('Dados recebidos da planilha:', json);
+                
+                // Log do primeiro pedido bruto para ver os nomes das colunas
+                if (json.pedidos && json.pedidos.length > 0) {
+                    console.log('Primeiro pedido bruto:', json.pedidos[0]);
+                    console.log('Campo Numero no primeiro pedido:', json.pedidos[0].Numero, json.pedidos[0]["Numero"], json.pedidos[0].numero);
+                }
 
                 if (json.success) {
+                    // Verifica se há pedidos
+                    if (!json.pedidos || json.pedidos.length === 0) {
+                        const kanbanBoard = document.getElementById('kanban-board');
+                        kanbanBoard.innerHTML = '<div style="text-align: center; padding: 40px; color: #1A2B0F; font-size: 18px; background-color: #F4E6CB; border-radius: 8px; margin: 20px;">Nenhum pedido encontrado na aba Pedidos</div>';
+                        document.getElementById('total-pedidos').textContent = '0 pedidos';
+                        return;
+                    }
                     
                     todosOsPedidos = json.pedidos.map(p => {
-                        let dataAPI = String(p.Data_da_Entrega || ''); // DD/MM/YYYY
-                        let horarioAPI = String(p.Horário_da_Entrega || '00:00'); // HH:MM
+                        // Mapeamento flexível para evitar N/A
+                        // Data pode vir como ISO (2025-12-25T08:00:00.000Z) ou DD/MM/YYYY
+                        let dataEntregaRaw = p.Data_Entrega || p["Data da Entrega"] || p.Data || "";
+                        
+                        // Converte data ISO para DD/MM/YYYY se necessário - sempre como String
+                        let dataEntrega = '';
+                        if (dataEntregaRaw) {
+                            if (String(dataEntregaRaw).includes('T') || dataEntregaRaw instanceof Date) {
+                                // É formato ISO ou Date object
+                                dataEntrega = formatISOtoDDMMYYYY(dataEntregaRaw);
+                            } else {
+                                // Já está em formato DD/MM/YYYY - garante que seja String
+                                dataEntrega = String(dataEntregaRaw).trim();
+                            }
+                        }
+                        // Garante que dataEntrega seja sempre String (evita N/A ou formatos estranhos)
+                        if (!dataEntrega || dataEntrega === 'Invalid Date' || dataEntrega === 'NaN/NaN/NaN') {
+                            dataEntrega = '';
+                        }
+                        
+                        const horarioEntrega = p.Horario_Entrega || p["Horario da Entrega"] || p.Horario || "";
+                        // Numero deve ser da coluna C (Numero) - mapeamento ultra-resiliente
+                        const numero = p.Numero || p["Numero"] || p.numero || p["numero"] || "N/A";
+                        const nome = p.Nome_Cliente || p["Nome do Cliente"] || p.Nome || "";
+                        const id = p.ID_do_Pedido || p.ID || "";
+                        // Normaliza o status para garantir consistência (case-insensitive)
+                        const statusRaw = p.Status_do_Pedido || p.Status || "Pedido Recebido";
+                        const status = normalizeStatus(statusRaw);
+                        const total = p.Total_Final || p["Total Final"] || 0;
 
                         // Converte DD/MM/AAAA para YYYY-MM-DD para o filtro e input HTML
-                        let dataParaInput = formatDDMMYYYYtoYYYYMMDD(dataAPI);
+                        const dataParaInput = formatDDMMYYYYtoYYYYMMDD(dataEntrega);
+                        
+                        // Log de aviso se a data não pôde ser processada
+                        if (dataEntrega && dataEntrega !== 'N/A' && !dataParaInput) {
+                            console.warn(`Pedido ${id || 'sem ID'}: Data em formato inválido que não pôde ser processada:`, dataEntrega);
+                        }
                         
                         let sortDate = new Date(0); 
                         
-                        // Cria um Date Object para ordenação
+                        // Cria um Date Object para ordenação (data + horário)
                         if (dataParaInput) {
                            try {
-                                sortDate = new Date(`${dataParaInput.replace(/-/g, '/')} ${formatTime(horarioAPI)}`);
+                                const horaFormatada = formatTime(String(horarioEntrega) || '00:00');
+                                // Se formatTime retornar 'N/A', usa '00:00' como padrão
+                                const horaParaOrdenacao = horaFormatada === 'N/A' ? '00:00' : horaFormatada;
+                                sortDate = new Date(`${dataParaInput.replace(/-/g, '/')} ${horaParaOrdenacao}`);
+                                
+                                // Verifica se a data é válida
+                                if (isNaN(sortDate.getTime())) {
+                                    sortDate = new Date(0);
+                                }
                            } catch(e) {
+                                console.warn(`Pedido ${id || 'sem ID'}: Erro ao criar Date Object para ordenação:`, e.message);
                                 sortDate = new Date(0);
                            }
                         }
                         
                         return {
                             ...p,
+                            ID_do_Pedido: String(id || ''),
+                            Nome_Cliente: String(nome || ''),
+                            Numero: String(numero), // Coluna C (Numero) - sempre String
+                            Data_Entrega: String(dataEntrega || ''), // Formato DD/MM/YYYY - sempre String
+                            Horario_Entrega: String(horarioEntrega || '00:00'),
+                            Status_do_Pedido: status,
+                            Status: status, // Mantém Status para compatibilidade
+                            Status_Pagamento: p.Status_Pagamento || p["Status do Pagamento"] || 'Pendente',
+                            Total_Final: total,
                             Data_para_Input: dataParaInput, // YYYY-MM-DD (para filtro)
-                            Horário_da_Entrega: horarioAPI, 
                             sortDate: sortDate 
                         };
                     }).filter(p => p.ID_do_Pedido); 
@@ -450,25 +898,19 @@
             } catch (error) {
                 console.error("Erro na comunicação com a API (Network/Parsing):", error);
                 alert("Erro de rede ao carregar os pedidos. Verifique o console para detalhes.");
-            } finally {
-                document.getElementById('refresh-button').textContent = 'Recarregar';
-                document.getElementById('refresh-button').disabled = false;
             }
         }
 
         /**
          * Função para renderizar o quadro Kanban e os cards
+         * Versão robusta com filtro flexível
          */
         function renderKanban() {
             const kanbanBoard = document.getElementById('kanban-board');
             kanbanBoard.innerHTML = '';
-            
-            const monthFilterInput = document.getElementById('month-filter').value;
-            
-            const filterYear = monthFilterInput ? monthFilterInput.substring(0, 4) : null;
-            const filterMonth = monthFilterInput ? monthFilterInput.substring(5, 7) : null; 
-            
-            // Variável para calcular totais APENAS dos pedidos visíveis
+            const dateFilterValue = document.getElementById('date-filter').value; // Formato YYYY-MM-DD
+            const searchValue = document.getElementById('search-filter').value.trim().toLowerCase(); // Busca
+
             let pedidosVisiveis = [];
 
             KANBAN_STATUSES.forEach(status => {
@@ -482,43 +924,68 @@
                 const header = document.createElement('div');
                 header.className = 'column-header';
                 
-                let filteredPedidos = todosOsPedidos.filter(p => p.Status === status);
+                // FILTRAGEM ROBUSTA (case-insensitive)
+                const pedidosNaColuna = todosOsPedidos.filter(p => {
+                    const statusPedido = p.Status_do_Pedido || p.Status || '';
+                    const statusMatch = statusEquals(statusPedido, status);
+                    if (!statusMatch) return false;
 
-                // =============================================================
-                // LÓGICA DE FILTRO BASEADA NA DATA DE ENTREGA (COLUNA C)
-                // =============================================================
-                let pedidosFiltradosPorData = filteredPedidos;
-
-                if (filterMonth && filterYear) {
-                    pedidosFiltradosPorData = filteredPedidos.filter(p => {
-                        const dateInput = String(p.Data_para_Input); // Espera YYYY-MM-DD
+                    // Filtro de busca (apenas ID e nome)
+                    if (searchValue) {
+                        const idMatch = (p.ID_do_Pedido || '').toLowerCase().includes(searchValue);
+                        const nomeMatch = (p.Nome_Cliente || '').toLowerCase().includes(searchValue);
                         
-                        if (dateInput && dateInput.length === 10 && dateInput !== 'N/A') {
-                             const pYear = dateInput.substring(0, 4);
-                             const pMonth = dateInput.substring(5, 7);
-                             
-                             return pMonth === filterMonth && pYear === filterYear;
+                        if (!idMatch && !nomeMatch) {
+                            return false;
                         }
-                        return false; 
-                    });
-                }
-                // FIM DA LÓGICA DE FILTRO
+                    }
 
-                // Adiciona pedidos visíveis à lista para cálculo do dashboard
-                pedidosVisiveis.push(...pedidosFiltradosPorData);
-                
-                header.textContent = `${status} (${pedidosFiltradosPorData.length})`;
+                    // Filtro de data (permite filtrar por dia específico ou mês/ano)
+                    if (dateFilterValue) {
+                        const [fYear, fMonth, fDay] = dateFilterValue.split('-');
+                        
+                        // Extrai a data do pedido (DD/MM/YYYY)
+                        const dateParts = String(p.Data_Entrega || p.Data_da_Entrega || '').match(/(\d{2})\/(\d{2})\/(\d{4})/);
+
+                        if (dateParts) {
+                            const pDay = dateParts[1];
+                            const pMonth = dateParts[2];
+                            const pYear = dateParts[3];
+                            
+                            // Se o dia selecionado for 01, filtra apenas por mês/ano (filtro padrão)
+                            // Se for outro dia, filtra por dia específico (seleção manual)
+                            if (fDay === '01') {
+                                // Filtra apenas por mês e ano
+                                return pMonth === fMonth && pYear === fYear;
+                            } else {
+                                // Filtra por dia, mês e ano específicos
+                                return pDay === fDay && pMonth === fMonth && pYear === fYear;
+                            }
+                        }
+                        return true; // Se a data estiver mal formatada, mostra o pedido em vez de esconder
+                    }
+                    
+                    return true; // Se não houver filtro de data, mostra tudo
+                });
+
+                // Ordena os pedidos por data e horário de entrega (mais antigo primeiro)
+                pedidosNaColuna.sort((a, b) => {
+                    const dateA = a.sortDate || new Date(0);
+                    const dateB = b.sortDate || new Date(0);
+                    return dateA - dateB;
+                });
+
+                pedidosVisiveis.push(...pedidosNaColuna);
+                header.textContent = `${status} (${pedidosNaColuna.length})`;
                 column.appendChild(header);
 
-                pedidosFiltradosPorData.forEach(pedido => {
-                    const card = createPedidoCard(pedido);
-                    column.appendChild(card);
+                pedidosNaColuna.forEach(pedido => {
+                    column.appendChild(createPedidoCard(pedido));
                 });
 
                 kanbanBoard.appendChild(column);
             });
             
-            // Chama a função de totais passando apenas os pedidos visíveis.
             updateDashboardTotals(pedidosVisiveis); 
         }
         
@@ -528,11 +995,14 @@
         function updateDashboardTotals(pedidosVisiveis) {
             let totalLiquidoGeral = 0;
             let totalPedidosContados = 0;
-            const statusToCount = ['Aberto', 'Orçado', 'Agendado - 50%', 'Agendado - 100%', 'Entregue', 'Entregue - Pendente', 'Entregue - Pago'];
+            const statusToCount = ['Pedido Recebido', 'Pedido Confirmado', 'Aguardando Retirada', 'Entregue'];
 
             pedidosVisiveis.forEach(p => {
                  const total = parseFloat(p.Total_Final || 0); 
-                 if (statusToCount.includes(p.Status)) {
+                 const statusAtual = p.Status_do_Pedido || p.Status || '';
+                 // Compara case-insensitive com os status que devem ser contados
+                 const deveContar = statusToCount.some(status => statusEquals(statusAtual, status));
+                 if (deveContar) {
                      totalLiquidoGeral += total;
                      totalPedidosContados++;
                  }
@@ -544,31 +1014,71 @@
 
         function createPedidoCard(pedido) {
             const card = document.createElement('div');
-            const sanitizedStatus = pedido.Status.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').trim('-'); 
+            const statusAtual = normalizeStatus(pedido.Status_do_Pedido || pedido.Status || 'Pedido Recebido');
+            const sanitizedStatus = statusAtual.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').trim('-'); 
 
-            card.className = `pedido-card status-${sanitizedStatus}`;
             card.setAttribute('draggable', true);
             card.dataset.id = pedido.ID_do_Pedido;
 
             const total = parseFloat(pedido.Total_Final || 0).toFixed(2).replace('.', ',');
             
-            const data = pedido.Data_da_Entrega; // DD/MM/AAAA
-            const hora = formatTime(pedido.Horário_da_Entrega); 
+            // Usa os campos mapeados no fetchPedidos
+            const data = pedido.Data_Entrega || 'N/A'; // DD/MM/AAAA
+            const hora = formatTime(pedido.Horario_Entrega || '00:00'); 
             const dataHora = `${data} às ${hora}`;
 
+            const nomeCliente = pedido.Nome_Cliente || 'N/A';
+            const statusPagamento = pedido.Status_Pagamento || 'Pendente';
+            
+            // Adiciona classe de cor de fundo baseada no status de pagamento
+            let classePagamento = '';
+            if (statusPagamento === 'Pago 50%' || statusPagamento === 'PAGO 50%' || statusPagamento === '50%' || statusPagamento === '50') {
+                classePagamento = 'pagamento-50';
+            } else if (statusPagamento === 'Pago 100%' || statusPagamento === 'PAGO 100%' || statusPagamento === 'Pago' || statusPagamento === 'PAGO') {
+                classePagamento = 'pagamento-pago';
+            } else {
+                classePagamento = 'pagamento-pendente';
+            }
+            
+            // Define as classes do card (status do pedido)
+            card.className = `pedido-card status-${sanitizedStatus}`;
+
             card.innerHTML = `
-                <div class="card-title">${pedido.Nome_do_Cliente}</div>
-                <div class="card-detail">Entrega: ${dataHora}</div>
-                <div class="card-detail">Total: R$ ${total}</div>
-                <div class="card-detail" style="font-weight: bold;">ID: ${pedido.ID_do_Pedido}</div>
+                <div class="card-id">${pedido.ID_do_Pedido}</div>
+                <div class="card-title">${nomeCliente}</div>
+                <div class="card-detail"><strong>Data e horário da entrega:</strong> ${dataHora}</div>
+                <div class="card-detail"><strong>Total do valor:</strong> R$ ${total}</div>
+                <div class="card-status-pagamento ${classePagamento}">
+                    <label>Status do Pagamento:</label>
+                    <select class="status-pagamento-select" data-pedido-id="${pedido.ID_do_Pedido}" onchange="atualizarStatusPagamento(this)">
+                        <option value="Pendente" ${statusPagamento === 'Pendente' || statusPagamento === 'PENDENTE' ? 'selected' : ''}>Pendente</option>
+                        <option value="Pago 50%" ${statusPagamento === 'Pago 50%' || statusPagamento === 'PAGO 50%' || statusPagamento === '50%' || statusPagamento === '50' ? 'selected' : ''}>Pago 50%</option>
+                        <option value="Pago 100%" ${statusPagamento === 'Pago 100%' || statusPagamento === 'PAGO 100%' || statusPagamento === 'Pago' || statusPagamento === 'PAGO' ? 'selected' : ''}>Pago 100%</option>
+                    </select>
+                </div>
             `;
 
             card.addEventListener('dragstart', dragStart);
             // Corrige o conflito de clique/drag:
             card.addEventListener('click', (e) => {
+                 // Não abre o modal se clicar no select
+                 if (e.target.tagName !== 'SELECT' && e.target.tagName !== 'LABEL') {
                  e.stopPropagation(); 
                  showModal(pedido.ID_do_Pedido);
+                 }
             }); 
+
+            // Previne que o select interfira no drag and drop
+            const selectElement = card.querySelector('.status-pagamento-select');
+            if (selectElement) {
+                selectElement.addEventListener('mousedown', (e) => {
+                    e.stopPropagation();
+                });
+                selectElement.addEventListener('dragstart', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+            }
 
             return card;
         }
@@ -598,29 +1108,126 @@
             await updatePedidoStatus(pedidoId, newStatus);
         }
 
+        // Função para exibir toast de notificação
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.backgroundColor = isError ? '#E60000' : '#2ecc71';
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                toast.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => {
+                    toast.style.animation = '';
+                }, 300);
+            }, 3000);
+        }
+
+        // Função para adicionar requisição à fila
+        async function addToQueue(formData) {
+            requestQueue.push(formData);
+            if (!isProcessingQueue) {
+                processQueue();
+            }
+        }
+
+        // Função para processar a fila de requisições sequencialmente
+        async function processQueue() {
+            // Se a fila está vazia, libera e retorna
+            if (requestQueue.length === 0) {
+                isProcessingQueue = false;
+                // Libera refresh automático após 8 segundos de silêncio na fila
+                setTimeout(() => {
+                    isUpdating = false;
+                }, 8000);
+                return;
+            }
+            
+            // Define flags de processamento
+            isProcessingQueue = true;
+            isUpdating = true;
+            
+            // Remove o primeiro item da fila
+            const currentRequest = requestQueue.shift();
+            
+            try {
+                // Aguarda o fetch completar
+                await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: currentRequest
+                });
+                console.log("Sincronizado com a planilha");
+            } catch (e) {
+                console.error("Erro na fila:", e);
+            }
+            
+            // Espera 500ms antes do próximo para estabilidade
+            setTimeout(processQueue, 500);
+        }
+
         async function updatePedidoStatus(id, status) {
+            // Normaliza o status para garantir consistência (case-insensitive)
+            const statusNormalizado = normalizeStatus(status);
+            
+            // 1. LÓGICA OTIMISTA - Atualiza o dado na memória do site (PRIMEIRA LINHA)
+            const pedido = todosOsPedidos.find(p => p.ID_do_Pedido === id);
+            if (pedido) {
+                pedido.Status_do_Pedido = statusNormalizado;
+                pedido.Status = statusNormalizado; // Mantém compatibilidade
+            }
+            
+            // 2. Muda a tela na hora (renderização local imediata)
+            renderKanban();
+            showToast('Salvo!');
+            
+            // 3. Adiciona à fila de requisições (em vez de fetch direto)
             const formData = new URLSearchParams();
             formData.append('action', 'updateStatus');
             formData.append('id', id);
-            formData.append('status', status);
+            formData.append('Status_do_Pedido', statusNormalizado);
+            
+            addToQueue(formData); // Adiciona à fila e processa
+        }
 
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    body: formData
-                });
-                const json = await response.json();
-
-                if (json.success) {
-                    await fetchPedidos(); 
-                } else {
-                    alert(`Falha ao atualizar status: ${json.message}`);
-                    await fetchPedidos(); 
-                }
-            } catch (error) {
-                alert("Erro de rede ao tentar atualizar o status.");
-                await fetchPedidos(); 
+        async function atualizarStatusPagamento(selectElement) {
+            const pedidoId = selectElement.dataset.pedidoId;
+            // Garante que o value seja exatamente o texto selecionado (Pendente, Pago 50% ou Pago 100%)
+            const novoStatus = String(selectElement.value).trim();
+            
+            // 1. LÓGICA OTIMISTA - Atualiza o dado na memória do site (PRIMEIRA LINHA)
+            const pedido = todosOsPedidos.find(p => p.ID_do_Pedido === pedidoId);
+            if (!pedido) {
+                showToast("Erro: Pedido não encontrado.", true);
+                return;
             }
+            
+            // Atualiza o status de pagamento no array local
+            pedido.Status_Pagamento = novoStatus;
+            
+            // 2. Muda a tela na hora (renderização local imediata)
+            renderKanban();
+            showToast('Salvo!');
+            
+            // 3. Adiciona à fila de requisições (em vez de fetch direto)
+            const formData = new URLSearchParams();
+            formData.append('action', 'updateData');
+            formData.append('id', pedidoId);
+            // Envia exatamente o texto selecionado (Pendente, Pago 50% ou Pago 100%)
+            formData.append('Status_Pagamento', novoStatus);
+            // Mantém os outros campos do pedido
+            formData.append('Nome_Cliente', pedido.Nome_Cliente || '');
+            formData.append('Numero', pedido.Numero || '');
+            formData.append('Data_Entrega', pedido.Data_Entrega || '');
+            formData.append('Horario_Entrega', pedido.Horario_Entrega || '');
+            formData.append('Total_Final', pedido.Total_Final || '');
+            formData.append('Forma_de_Pagamento', pedido.Forma_de_Pagamento || '');
+            formData.append('Cupom', pedido.Cupom || '');
+            formData.append('Resumo_dos_Itens', pedido.Resumo_dos_Itens || '');
+            formData.append('Status_do_Pedido', pedido.Status_do_Pedido || '');
+            
+            addToQueue(formData); // Adiciona à fila e processa
         }
         
         // MODAL FUNCTIONS
@@ -637,38 +1244,40 @@
 
             pedidoSendoEditado = pedido; 
             
-            // Exibição
+            // Exibição - usa os campos mapeados corretamente
             const totalNum = parseFloat(pedido.Total_Final || 0);
             const totalFormatado = totalNum.toFixed(2).replace('.', ',');
             
-            const data = pedido.Data_da_Entrega;
-            const hora = formatTime(pedido.Horário_da_Entrega);
+            // Usa os campos mapeados no fetchPedidos
+            const data = pedido.Data_Entrega || 'N/A';
+            const hora = formatTime(pedido.Horario_Entrega || '00:00');
             const dataHora = `${data} às ${hora}`;
             
-            // Preenche o cabeçalho e detalhes
-            document.getElementById('modal-title').innerHTML = `Detalhes do Pedido <span id="pedido-id">${id}</span>`;
-            document.getElementById('detail-status').textContent = pedido.Status;
-            document.getElementById('detail-nome').textContent = pedido.Nome_do_Cliente;
-            document.getElementById('detail-data-hora').textContent = dataHora;
-            document.getElementById('detail-pagamento').textContent = pedido.Forma_Pagamento;
+            // Preenche o cabeçalho e detalhes - usa os campos mapeados
+            const nomeCliente = pedido.Nome_Cliente || 'N/A';
+            const cupom = pedido.Cupom || 'N/A';
+            const statusPagamento = pedido.Status_Pagamento || 'PENDENTE';
+            
+            document.getElementById('modal-title').innerHTML = `<span id="pedido-id">${id}</span>`;
+            document.getElementById('detail-nome').textContent = nomeCliente;
+            // Sincronização do Modal - usa o campo correto pedido.Numero
+            document.getElementById('detail-numero').textContent = pedido.Numero || 'N/A';
+            document.getElementById('detail-data').textContent = data;
+            document.getElementById('detail-horario').textContent = hora;
+            document.getElementById('detail-pagamento').textContent = pedido.Forma_de_Pagamento || pedido.Forma_Pagamento || 'N/A';
+            document.getElementById('detail-status-pagamento').textContent = statusPagamento;
+            document.getElementById('detail-cupom').textContent = cupom;
             document.getElementById('detail-total-final').textContent = `R$ ${totalFormatado}`;
-            document.getElementById('detail-resumo-itens').textContent = extractResumoItens(pedido.Resumo_dos_Itens);
+            document.getElementById('detail-resumo-itens').textContent = extractResumoItens(pedido.Resumo_dos_Itens || '');
 
-            // Preenchimento para Edição
-            const editStatusSelect = document.getElementById('edit-status');
-            editStatusSelect.innerHTML = '';
-            KANBAN_STATUSES.forEach(status => {
-                 const option = document.createElement('option');
-                 option.value = status;
-                 option.textContent = status;
-                 editStatusSelect.appendChild(option);
-            });
-            editStatusSelect.value = pedido.Status; 
-
-            document.getElementById('edit-nome').value = pedido.Nome_do_Cliente;
-            document.getElementById('edit-data').value = pedido.Data_da_Entrega; // DD/MM/AAAA
-            document.getElementById('edit-horario').value = formatTime(pedido.Horário_da_Entrega); // HH:MM
-            document.getElementById('edit-pagamento').value = pedido.Forma_Pagamento;
+            // Preenche o formulário de edição usando os campos mapeados
+            document.getElementById('edit-nome').value = nomeCliente;
+            document.getElementById('edit-numero').value = numero;
+            document.getElementById('edit-data').value = pedido.Data_Entrega || ''; // DD/MM/AAAA - usa campo mapeado
+            document.getElementById('edit-horario').value = formatTime(pedido.Horario_Entrega || '00:00'); // HH:MM - usa campo mapeado
+            document.getElementById('edit-pagamento').value = pedido.Forma_de_Pagamento || pedido.Forma_Pagamento || 'Pix';
+            document.getElementById('edit-status-pagamento').value = statusPagamento;
+            document.getElementById('edit-cupom').value = cupom;
             document.getElementById('edit-total').value = totalNum.toFixed(2); 
             
             // O Resumo é preenchido, mas é readonly
@@ -725,79 +1334,294 @@
         }
         
         async function updatePedidoData() {
+            // Define trava de atualização
+            isUpdating = true;
+            
             const formData = new URLSearchParams();
             formData.append('action', 'updateData');
             
             // Pega os dados do formulário de edição
-            const statusToSheet = document.getElementById('edit-status').value;
+            // Status do Pedido não é editável - mantém o valor atual do pedido
+            const statusToSheet = pedidoSendoEditado.Status_do_Pedido || pedidoSendoEditado.Status || 'Pedido Recebido';
             const dataToSheet = document.getElementById('edit-data').value; // DD/MM/AAAA
             const horaToSheet = document.getElementById('edit-horario').value; // HH:MM
             const nomeToSheet = document.getElementById('edit-nome').value;
+            const numeroToSheet = document.getElementById('edit-numero').value;
             const totalToSheet = document.getElementById('edit-total').value; 
             const pagamentoToSheet = document.getElementById('edit-pagamento').value;
+            const statusPagamentoToSheet = document.getElementById('edit-status-pagamento').value;
+            const cupomToSheet = document.getElementById('edit-cupom').value;
             
             // O Resumo é pego da variável original (já que é readonly)
-            const resumoToSheet = pedidoSendoEditado.Resumo_dos_Itens; 
+            const resumoToSheet = pedidoSendoEditado.Resumo_dos_Itens || pedidoSendoEditado.Resumo_dos_Itens || ''; 
 
-            // Envia no formato que o Apps Script espera
+            // Envia no formato que o Apps Script espera (usando os nomes exatos das colunas da planilha)
+            // Ordem: action, id, e depois todos os campos da planilha
             formData.append('id', pedidoSendoEditado.ID_do_Pedido);
-            formData.append('Status', statusToSheet); 
-            formData.append('Nome_do_Cliente', nomeToSheet);
-            formData.append('Horário_da_Entrega', horaToSheet);
+            formData.append('Nome_Cliente', nomeToSheet);
+            formData.append('Numero', String(numeroToSheet || '')); // Garante String
+            formData.append('Data_Entrega', String(dataToSheet || '')); // Garante String
+            formData.append('Horario_Entrega', horaToSheet);
             formData.append('Total_Final', totalToSheet); 
+            formData.append('Forma_de_Pagamento', pagamentoToSheet);
+            formData.append('Status_Pagamento', statusPagamentoToSheet);
+            formData.append('Cupom', cupomToSheet);
             formData.append('Resumo_dos_Itens', resumoToSheet); 
-            formData.append('Forma_Pagamento', pagamentoToSheet); 
-            formData.append('Data_da_Entrega', dataToSheet); 
+            formData.append('Status_do_Pedido', statusToSheet); 
 
             try {
-                const response = await fetch(API_URL, {
+                // Usa mode: 'no-cors' para evitar erros de pré-verificação com Google Apps Script
+                await fetch(API_URL, {
                     method: 'POST',
+                    mode: 'no-cors',
                     body: formData
                 });
-                const json = await response.json();
-                if (json.success) {
-                    alert(`Dados do pedido ${pedidoSendoEditado.ID_do_Pedido} atualizados com sucesso!`);
-                    closeModal();
-                    await fetchPedidos();
-                } else {
-                    alert(`Falha ao atualizar dados: ${json.message}`);
+                
+                // Atualiza o pedido local antes de recarregar
+                const pedido = todosOsPedidos.find(p => p.ID_do_Pedido === pedidoSendoEditado.ID_do_Pedido);
+                if (pedido) {
+                    pedido.Nome_Cliente = nomeToSheet;
+                    pedido.Numero = String(numeroToSheet || '');
+                    pedido.Data_Entrega = String(dataToSheet || '');
+                    pedido.Horario_Entrega = horaToSheet;
+                    pedido.Total_Final = totalToSheet;
+                    pedido.Forma_de_Pagamento = pagamentoToSheet;
+                    pedido.Status_Pagamento = statusPagamentoToSheet;
+                    pedido.Cupom = cupomToSheet;
+                    pedido.Status_do_Pedido = statusToSheet;
+                    pedido.Status = statusToSheet;
                 }
+                
+                showToast('Salvo na Planilha');
+                closeModal();
+                
+                // Re-renderiza imediatamente
+                renderKanban();
+                
+                // Libera a trava após tempo de segurança
+                setTimeout(() => {
+                    isUpdating = false;
+                    // Recarrega após liberar a trava para sincronizar
+                    fetchPedidos();
+                }, 2000);
             } catch (error) {
-                alert("Erro de rede ao tentar atualizar os dados.");
+                showToast("Erro de rede ao tentar atualizar os dados.", true);
+                // Libera a trava mesmo com erro
+                setTimeout(() => {
+                    isUpdating = false;
+                }, 2000);
             }
         }
 
-        document.getElementById('delete-button').addEventListener('click', () => {
-            if (!pedidoSendoEditado) return;
-            if (!confirm(`Tem certeza que deseja EXCLUIR o pedido ${pedidoSendoEditado.ID_do_Pedido}? Esta ação é IRREVERSÍVEL (na planilha)!`)) {
-                return;
-            }
-            alert("Atenção: A função de 'delete' (excluir) não está implementada na API do Apps Script fornecida. O pedido não foi excluído.");
-            closeModal();
-        });
 
 
         // =========================================================================
         // INICIALIZAÇÃO E EVENTOS
         // =========================================================================
 
+        // Função para atualizar o display da data no formato brasileiro
+        function atualizarDisplayData() {
+            const dateFilterInput = document.getElementById('date-filter');
+            const dateFilterDisplay = document.getElementById('date-filter-display');
+            
+            if (dateFilterInput.value) {
+                const [ano, mes, dia] = dateFilterInput.value.split('-');
+                
+                // Se for dia 01, mostra apenas MM/AAAA
+                if (dia === '01') {
+                    dateFilterDisplay.value = `${mes}/${ano}`;
+                } else {
+                    // Se for outro dia, mostra DD/MM/AAAA
+                    dateFilterDisplay.value = `${dia}/${mes}/${ano}`;
+                }
+            } else {
+                dateFilterDisplay.value = '';
+            }
+        }
+
+        // Variáveis globais para o calendário
+        let currentCalendarDate = new Date();
+        let selectedDate = null;
+
+        // Função para renderizar o calendário
+        function renderCalendar() {
+            const calendarGrid = document.getElementById('calendar-grid');
+            const monthYearDisplay = document.getElementById('month-year-display');
+            
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
+            
+            const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                               'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+            
+            monthYearDisplay.textContent = `${monthNames[month]} ${year}`;
+            
+            // Primeiro dia do mês
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startingDayOfWeek = firstDay.getDay();
+            
+            // Dias da semana
+            const weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+            
+            calendarGrid.innerHTML = '';
+            
+            // Adiciona cabeçalhos dos dias da semana
+            weekdays.forEach(day => {
+                const dayHeader = document.createElement('div');
+                dayHeader.className = 'date-picker-weekday';
+                dayHeader.textContent = day;
+                calendarGrid.appendChild(dayHeader);
+            });
+            
+            // Adiciona células vazias para os dias do mês anterior
+            for (let i = 0; i < startingDayOfWeek; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'date-picker-day other-month';
+                calendarGrid.appendChild(emptyDay);
+            }
+            
+            // Adiciona os dias do mês
+            const hoje = new Date();
+            const dateFilterInput = document.getElementById('date-filter');
+            const currentValue = dateFilterInput.value ? new Date(dateFilterInput.value + 'T00:00:00') : null;
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'date-picker-day';
+                dayElement.textContent = day;
+                
+                const cellDate = new Date(year, month, day);
+                
+                // Marca o dia de hoje
+                if (cellDate.toDateString() === hoje.toDateString()) {
+                    dayElement.classList.add('today');
+                }
+                
+                // Marca o dia selecionado
+                if (currentValue && cellDate.toDateString() === currentValue.toDateString()) {
+                    dayElement.classList.add('selected');
+                }
+                
+                dayElement.addEventListener('click', () => {
+                    selectDate(year, month, day);
+                });
+                
+                calendarGrid.appendChild(dayElement);
+            }
+        }
+
+        // Função para selecionar uma data
+        function selectDate(year, month, day) {
+            const dateFilterInput = document.getElementById('date-filter');
+            const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            dateFilterInput.value = formattedDate;
+            atualizarDisplayData();
+            renderKanban();
+            closeDatePicker();
+        }
+
+        // Função para abrir o calendário
+        function openDatePicker() {
+            const dateFilterInput = document.getElementById('date-filter');
+            if (dateFilterInput.value) {
+                const [year, month, day] = dateFilterInput.value.split('-');
+                currentCalendarDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+            } else {
+                currentCalendarDate = new Date();
+            }
+            renderCalendar();
+            document.getElementById('date-picker-modal').classList.add('show');
+        }
+
+        // Função para fechar o calendário
+        function closeDatePicker() {
+            document.getElementById('date-picker-modal').classList.remove('show');
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             
-            const monthFilterInput = document.getElementById('month-filter');
-            const today = new Date();
-            const currentYear = today.getFullYear();
-            const currentMonth = String(today.getMonth() + 1).padStart(2, '0');
+            const dateFilterInput = document.getElementById('date-filter');
+            const dateFilterDisplay = document.getElementById('date-filter-display');
             
-            // Inicializa o filtro de mês/ano de entrega para o mês atual.
-            monthFilterInput.value = `${currentYear}-${currentMonth}`;
+            // Define o filtro para o período vigente (primeiro dia do mês atual - filtra por mês/ano)
+            const hoje = new Date();
+            const ano = hoje.getFullYear();
+            const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+            // Usa dia 01 para indicar que é filtro por mês/ano (não por dia específico)
+            dateFilterInput.value = `${ano}-${mes}-01`;
+            atualizarDisplayData();
 
             fetchPedidos();
 
-            document.getElementById('refresh-button').addEventListener('click', fetchPedidos);
-            // Chama a renderização/filtro toda vez que o mês/ano é alterado
-            monthFilterInput.addEventListener('change', renderKanban); 
+            // Quando clicar no display, abre o calendário customizado
+            dateFilterDisplay.addEventListener('click', openDatePicker);
             
-            setInterval(fetchPedidos, 30000); 
+            // Botões do calendário
+            document.getElementById('prev-month').addEventListener('click', () => {
+                currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+                renderCalendar();
+            });
+            
+            document.getElementById('next-month').addEventListener('click', () => {
+                currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+                renderCalendar();
+            });
+            
+            document.getElementById('btn-limpar').addEventListener('click', () => {
+                dateFilterInput.value = '';
+                atualizarDisplayData();
+                renderKanban();
+                closeDatePicker();
+            });
+            
+            document.getElementById('btn-hoje').addEventListener('click', () => {
+                const hoje = new Date();
+                const year = hoje.getFullYear();
+                const month = String(hoje.getMonth() + 1).padStart(2, '0');
+                const day = String(hoje.getDate()).padStart(2, '0');
+                dateFilterInput.value = `${year}-${month}-${day}`;
+                atualizarDisplayData();
+                renderKanban();
+                closeDatePicker();
+            });
+            
+            document.getElementById('btn-mes-atual').addEventListener('click', () => {
+                const hoje = new Date();
+                const year = hoje.getFullYear();
+                const month = String(hoje.getMonth() + 1).padStart(2, '0');
+                // Define como primeiro dia do mês (filtro por mês/ano)
+                dateFilterInput.value = `${year}-${month}-01`;
+                atualizarDisplayData();
+                renderKanban();
+                closeDatePicker();
+            });
+            
+            // Fechar calendário ao clicar fora
+            document.getElementById('date-picker-modal').addEventListener('click', (e) => {
+                if (e.target.id === 'date-picker-modal') {
+                    closeDatePicker();
+                }
+            });
+
+            // Chama a renderização/filtro toda vez que a data é alterada
+            dateFilterInput.addEventListener('change', () => {
+                atualizarDisplayData();
+                renderKanban();
+            });
+            
+            // Chama a renderização/filtro toda vez que a busca é alterada
+            const searchFilterInput = document.getElementById('search-filter');
+            searchFilterInput.addEventListener('input', renderKanban); 
+            
+            // Atualização automática a cada 15 segundos para sincronização com a planilha
+            // Só executa se não estiver em operação (isUpdating = false)
+            setInterval(() => {
+                if (!isUpdating) {
+                    fetchPedidos();
+                }
+            }, 15000); 
             
             window.addEventListener('click', (event) => {
                 // Fecha o modal ao clicar fora
@@ -811,6 +1635,8 @@
              
         });
     </script>
+    
+    <!-- Toast Notification -->
+    <div id="toast"></div>
 </body>
 </html>
-

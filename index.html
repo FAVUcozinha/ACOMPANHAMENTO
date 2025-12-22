@@ -84,6 +84,143 @@
         #dashboard-totals strong { display: block; font-size: 1.5em; color: #E09F41; }
         #dashboard-totals span { font-size: 0.8em; color: #555; }
         
+        /* Sistema de Tabs Superior - Estilo de Abas de Documento */
+        .main-tabs-container {
+            background-color: #F4E6CB;
+            padding: 0;
+            margin: 0;
+            position: relative;
+        }
+        .main-tabs-header {
+            display: flex;
+            gap: 0;
+            padding: 0;
+            margin: 0;
+            background-color: #E8D5B5;
+            border-bottom: 2px solid #E09F41;
+            padding-top: 8px;
+            padding-left: 8px;
+            padding-right: 8px;
+        }
+        .main-tab-button {
+            flex: 1;
+            padding: 12px 20px;
+            background-color: #D4C5A5;
+            border: none;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+            color: #1A2B0F;
+            font-family: 'Basic Choice 2', 'Roboto', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            position: relative;
+            margin-right: 3px;
+            box-shadow: inset 0 -2px 5px rgba(0,0,0,0.1);
+        }
+        .main-tab-button:last-child {
+            margin-right: 0;
+        }
+        .main-tab-button::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: #D4C5A5;
+            z-index: 1;
+        }
+        .main-tab-button:hover {
+            background-color: #C8B99A;
+            transform: translateY(-2px);
+        }
+        .main-tab-button.active {
+            background-color: #F4E6CB;
+            color: #1A2B0F;
+            box-shadow: 0 -3px 8px rgba(0,0,0,0.15), inset 0 2px 0 rgba(255,255,255,0.2);
+            z-index: 10;
+            transform: translateY(-2px);
+        }
+        .main-tab-button.active::after {
+            background-color: #F4E6CB;
+            height: 3px;
+        }
+        .main-tab-content {
+            display: none;
+            background-color: #F4E6CB;
+            padding-top: 0;
+        }
+        .main-tab-content.active {
+            display: block;
+        }
+        
+        /* Estilos para visualização de Custos */
+        .custo-item {
+            background-color: #F4E6CB;
+            border: 1px solid #E09F41;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .custo-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #7FB1C8;
+        }
+        .custo-item-nome {
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #1A2B0F;
+        }
+        .custo-item-data {
+            color: #555;
+            font-size: 0.9em;
+        }
+        .custo-item-detalhes {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .custo-detalhe {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            background-color: #E8D5B5;
+            border-radius: 5px;
+        }
+        .custo-detalhe-label {
+            font-weight: 600;
+            color: #1A2B0F;
+        }
+        .custo-detalhe-valor {
+            color: #E09F41;
+            font-weight: bold;
+        }
+        .custo-total {
+            text-align: right;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px solid #E09F41;
+        }
+        .custo-total-label {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #1A2B0F;
+        }
+        .custo-total-valor {
+            font-size: 2em;
+            font-weight: bold;
+            color: #E09F41;
+        }
+        
         .filter-bar {
             background-color: #F4E6CB; 
             padding: 10px 20px; 
@@ -138,7 +275,7 @@
         }
         
         /* Modal do Calendário */
-        #date-picker-modal {
+        #date-picker-modal, #date-picker-modal-custos {
             display: none;
             position: fixed;
             z-index: 2000;
@@ -150,7 +287,7 @@
             justify-content: center;
             align-items: center;
         }
-        #date-picker-modal.show {
+        #date-picker-modal.show, #date-picker-modal-custos.show {
             display: flex;
         }
         .date-picker-content {
@@ -214,6 +351,23 @@
             color: white;
             font-weight: bold;
         }
+        .date-picker-day.range-start {
+            background-color: #7FB1C8;
+            color: white;
+            font-weight: bold;
+            border-radius: 6px 0 0 6px;
+        }
+        .date-picker-day.range-end {
+            background-color: #7FB1C8;
+            color: white;
+            font-weight: bold;
+            border-radius: 0 6px 6px 0;
+        }
+        .date-picker-day.range-middle {
+            background-color: #E3F2FD;
+            color: #1A2B0F;
+            border-radius: 0;
+        }
         .date-picker-day.other-month {
             color: #ccc;
         }
@@ -260,18 +414,25 @@
             gap: 15px;
             padding: 20px;
             padding-bottom: 15px; /* Espaço para a scrollbar */
-            overflow-x: scroll; 
+            overflow-x: auto; 
             overflow-y: visible; /* Permite scroll vertical no desktop */
             -webkit-overflow-scrolling: touch; 
-            min-height: calc(100vh - 180px); /* Altura mínima baseada na viewport menos header e filter-bar */
+            min-height: calc(100vh - 220px); /* Altura mínima baseada na viewport menos header, tabs e filter-bar */
             scrollbar-width: auto; /* Firefox */
             scrollbar-color: #E09F41 #F4E6CB; /* Firefox */
             position: relative;
+            width: 100%;
+            max-width: none;
+            margin: 0;
+            background-color: #7FB1C8; /* Fundo azul atrás das colunas */
+            border-radius: 10px;
+            flex-wrap: nowrap;
+            justify-content: flex-start;
         }
         @media (max-width: 768px) {
             #kanban-board {
                 overflow-y: hidden;
-                height: calc(100vh - 180px); /* Altura fixa no mobile */
+                height: calc(100vh - 250px); /* Altura fixa no mobile considerando tabs */
             }
         }
         
@@ -297,8 +458,10 @@
             background: #c2883a;
         }
         .kanban-column {
-            flex-basis: 300px; 
+            flex-basis: 280px; 
             flex-shrink: 0;
+            min-width: 260px; /* Largura mínima para evitar corte de texto */
+            max-width: 100%; /* Respeita a largura do container */
             background-color: #F4E6CB;
             border-radius: 8px;
             padding: 15px;
@@ -311,10 +474,29 @@
             font-weight: bold;
             font-size: 1.2em;
             margin-bottom: 10px;
+            padding: 8px 5px;
             padding-bottom: 5px;
             border-bottom: 2px solid #E09F41; 
             text-align: center;
             color: #1A2B0F;
+            white-space: nowrap; /* Evita quebra de linha */
+            overflow: hidden;
+            text-overflow: ellipsis; /* Adiciona "..." se o texto for muito longo */
+            word-wrap: break-word; /* Permite quebra de palavras longas se necessário */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .column-header-text {
+            flex: 1;
+            text-align: center;
+        }
+        .column-select-all-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            flex-shrink: 0;
         }
         .column-content {
             transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
@@ -336,6 +518,17 @@
             h1 .title-line1::after { content: ''; }
             h1 .title-line2 { display: block; margin-top: 2px; }
             .controls { justify-content: space-around; width: 100%; margin-bottom: 10px; }
+            .main-tab-button {
+                font-size: 14px;
+                padding: 10px 8px;
+                border-top-left-radius: 12px;
+                border-top-right-radius: 12px;
+            }
+            .main-tabs-header {
+                padding-top: 6px;
+                padding-left: 4px;
+                padding-right: 4px;
+            }
             .filter-bar { flex-direction: column; align-items: flex-start; padding: 10px; }
             .filter-bar > * { width: 100%; margin-top: 5px; }
             .search-filter { width: 100%; }
@@ -346,7 +539,7 @@
                 box-sizing: border-box; 
             }
             .date-filter { width: 100%; }
-            .date-filter input[type="text"] { 
+            .date-filter input[type="date"] { 
                 width: 100%; 
                 max-width: 100%; 
                 box-sizing: border-box; 
@@ -358,11 +551,13 @@
                 gap: 10px; 
                 overflow-x: hidden; 
                 overflow-y: auto;
-                height: calc(100vh - 180px);
+                height: calc(100vh - 250px);
             }
             .kanban-column { 
                 width: 100%; 
                 flex-basis: auto;
+                min-width: 100%; /* Garante largura total no mobile */
+                max-width: 100%;
                 min-height: auto;
                 margin-bottom: 10px;
             }
@@ -370,10 +565,21 @@
                 min-height: 60px;
             }
             .column-header {
-                padding: 15px;
+                padding: 15px 10px;
                 margin-bottom: 0;
-                cursor: pointer;
+                cursor: default;
                 user-select: none;
+                white-space: normal; /* Permite quebra de linha no mobile */
+                word-wrap: break-word;
+                overflow: visible;
+                text-overflow: clip;
+            }
+            .column-header-text {
+                cursor: pointer;
+            }
+            .column-select-all-checkbox {
+                width: 18px;
+                height: 18px;
             }
             .column-content {
                 max-height: 1000px;
@@ -385,9 +591,38 @@
                 pointer-events: auto;
             }
         }
+        
+        /* Responsividade adicional baseada em largura */
+        @media (max-width: 480px) {
+            .main-tab-button {
+                font-size: 12px;
+                padding: 10px 8px;
+            }
+            #kanban-board {
+                height: calc(100vh - 270px);
+            }
+        }
+        
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .main-tab-button {
+                font-size: 15px;
+                padding: 14px 18px;
+            }
+        }
 
         /* Cores de Status */
         .pedido-card { background-color: white; border: 1px solid #ddd; border-left: 5px solid #7FB1C8; border-radius: 6px; padding: 10px; margin-bottom: 10px; cursor: pointer; color: #1A2B0F; position: relative; }
+        .pedido-card.com-observacao { border-left: 5px solid #FF9800 !important; }
+        .card-observacao-alerta {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #FF9800;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-top: 5px;
+            margin-bottom: 8px;
+        }
         .card-checkbox {
             position: absolute;
             top: 10px;
@@ -460,6 +695,17 @@
             color: white;
         }
         .card-id { font-size: 0.85em; position: absolute; top: 10px; right: 10px; color: #7FB1C8; font-weight: bold; }
+        .card-obs-badge {
+            display: inline-block;
+            background-color: #FF9800;
+            color: white;
+            font-size: 0.7em;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 5px;
+            font-weight: bold;
+            vertical-align: middle;
+        }
         .card-title { font-weight: bold; font-size: 1.1em; margin-top: 25px; margin-bottom: 12px; }
         .card-detail { font-size: 0.9em; margin-bottom: 6px; }
         .card-status-pagamento { margin-top: 8px; display: flex; align-items: center; gap: 8px; }
@@ -475,6 +721,47 @@
         .status-Aguardando-Retirada { border-left-color: #1abc9c; } 
         .status-Entregue { border-left-color: #2ecc71; } 
         .status-Cancelado { border-left-color: #E60000; opacity: 0.6; } 
+        
+        /* Compactação e layout horizontal no desktop */
+        @media (min-width: 769px) {
+            #kanban-board {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+            }
+            .kanban-column {
+                flex-basis: 280px;
+                min-width: 260px;
+            }
+            .pedido-card {
+                padding: 8px;
+                margin-bottom: 8px;
+            }
+            .card-id {
+                top: 6px;
+                right: 8px;
+            }
+            .card-title {
+                font-size: 1em;
+                margin-top: 12px;
+                margin-bottom: 8px;
+            }
+            .card-detail {
+                font-size: 0.85em;
+                margin-bottom: 4px;
+            }
+            .card-status-pagamento {
+                margin-top: 6px;
+                gap: 6px;
+            }
+            .card-status-pagamento select {
+                padding: 5px 6px;
+                font-size: 0.85em;
+            }
+            .card-status-etapa select {
+                padding: 6px;
+                font-size: 0.85em;
+            }
+        }
         
         /* Cores de fundo por status de pagamento - apenas na área do status */
         .card-status-pagamento.pagamento-pendente { 
@@ -527,9 +814,12 @@
             right: 50px; 
             color: #7FB1C8; 
             font-weight: bold; 
-            font-size: 1.4em;
+            font-size: 1.4em; 
         }
-        #modal-details { color: #000000; }
+        #modal-details { 
+            color: #000000; 
+            margin-top: 50px; /* Espaço para o ID do pedido não sobrepor */
+        }
         #modal-details strong { color: #000000; }
         #modal-details p { color: #000000; margin: 0; }
         #modal-details p span { color: #000000; }
@@ -597,9 +887,6 @@
             margin-top: 15px;
             width: 100%;
             padding-right: 0;
-        }
-        #edit-button {
-            margin-left: auto;
         }
         .modal-actions button, #edit-form button {
             font-family: 'Basic Choice 2', 'Roboto', sans-serif;
@@ -691,43 +978,45 @@
         </div>
     </header>
 
+    <div id="main-tab-pedidos" class="main-tab-content active">
     <div class="filter-bar">
-        <div class="search-filter">
-            <label for="search-filter">Buscar:</label>
-            <input type="text" id="search-filter" placeholder="ID do pedido, nome ou número do cliente" value="">
+            <div class="search-filter">
+                <label for="search-filter">Buscar:</label>
+                <input type="text" id="search-filter" placeholder="ID do pedido, nome ou número do cliente" value="">
+            </div>
+            <div class="date-filter">
+                <label for="date-filter">Data de Entrega:</label>
+                <input type="date" id="date-filter" value="">
+                <input type="hidden" id="date-filter-inicial" value="">
+                <input type="text" id="date-filter-display" readonly placeholder="MM/AAAA">
+            </div>
         </div>
-        <div class="date-filter">
-            <label for="date-filter">Data de Entrega:</label>
-            <input type="date" id="date-filter" value="">
-            <input type="text" id="date-filter-display" readonly placeholder="MM/AAAA">
-        </div>
-    </div>
 
-    <!-- Modal do Calendário -->
-    <div id="date-picker-modal">
-        <div class="date-picker-content">
-            <div class="date-picker-header">
-                <button class="date-picker-nav" id="prev-month">‹</button>
-                <div class="date-picker-month-year" id="month-year-display"></div>
-                <button class="date-picker-nav" id="next-month">›</button>
+        <div id="date-picker-modal">
+            <div class="date-picker-content">
+                <div class="date-picker-header">
+                    <button class="date-picker-nav" id="prev-month">‹</button>
+                    <div class="date-picker-month-year" id="month-year-display"></div>
+                    <button class="date-picker-nav" id="next-month">›</button>
+                </div>
+                <div class="date-picker-calendar" id="calendar-grid"></div>
+                <div class="date-picker-buttons">
+                    <button class="date-picker-btn limpar" id="btn-limpar">Limpar</button>
+                    <button class="date-picker-btn hoje" id="btn-hoje">Hoje</button>
+                    <button class="date-picker-btn mes-atual" id="btn-mes-atual">Mês Atual</button>
+                </div>
             </div>
-            <div class="date-picker-calendar" id="calendar-grid"></div>
-            <div class="date-picker-buttons">
-                <button class="date-picker-btn limpar" id="btn-limpar">Limpar</button>
-                <button class="date-picker-btn hoje" id="btn-hoje">Hoje</button>
-                <button class="date-picker-btn mes-atual" id="btn-mes-atual">Mês Atual</button>
-            </div>
-        </div>
     </div>
 
     <main id="kanban-board">
     </main>
-    
+    </div>
+
     <div id="modal" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="closeModal()">&times;</span>
             <span id="pedido-id"></span>
-            
+            <br><br>
             <div id="modal-details">
                 <div class="detail-group">
                     <p><strong>Nome do Cliente:</strong> <span id="detail-nome"></span></p>
@@ -749,27 +1038,16 @@
                 <p><strong>Total Final:</strong> <span id="detail-total-final"></span></p>
                 </div>
                 
-                <!-- Sistema de Abas -->
-                <div class="detail-group">
-                    <div class="tabs-container">
-                        <div class="tabs-header">
-                            <button class="tab-button active" onclick="switchTab('resumo-pedidos')">Resumo de Pedidos</button>
-                            <button class="tab-button" onclick="switchTab('custos')">Custos</button>
-                            <button class="tab-button" onclick="switchTab('resumo')">Resumo</button>
-                        </div>
-                        <div class="tabs-content">
-                            <div id="tab-resumo-pedidos" class="tab-pane active">
-                                <strong>Resumo do pedido:</strong> 
-                <pre id="detail-resumo-itens"></pre>
-                            </div>
-                            <div id="tab-custos" class="tab-pane">
-                                <p>Conteúdo de Custos será implementado aqui.</p>
-                            </div>
-                            <div id="tab-resumo" class="tab-pane">
-                                <p>Conteúdo de Resumo será implementado aqui.</p>
-                            </div>
-                        </div>
+                <div class="detail-group" id="detail-observacoes-group" style="display: none;">
+                    <div style="background-color: #FFF3CD; border: 2px solid #FF9800; border-radius: 8px; padding: 15px; margin-top: 10px;">
+                        <p style="margin: 0; font-weight: bold; color: #856404; font-size: 1.1em; margin-bottom: 8px;">⚠️ Observações:</p>
+                        <p style="margin: 0; color: #856404; white-space: pre-wrap;" id="detail-observacoes"></p>
                     </div>
+                </div>
+                
+                <div class="detail-group">
+                    <strong>Resumo do pedido:</strong> 
+                <pre id="detail-resumo-itens"></pre>
                 </div>
             </div>
 
@@ -837,7 +1115,7 @@
         // JAVASCRIPT (LÓGICA)
         // =========================================================================
 
-        const API_URL = 'https://script.google.com/macros/s/AKfycbySznszHzGE20MWh8DFmYZfywgtih8_JojKwX9vZXOypxJ6BMFVLMey1ZF9sOoX_QKAXQ/exec'; 
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzDSIjme2I0kC2ccEsYqgyd4vG-vVS03zJiXNx5wJDEaRylz2R80y9evrFasjycCi-hkA/exec'; 
         const CALCULATOR_URL = 'https://favucozinha.github.io/Calculadora-Favu/'; 
 
         // ARRAY FINAL DE STATUS
@@ -866,6 +1144,7 @@
         }
 
         let todosOsPedidos = [];
+        let todosOsCustos = [];
         let pedidoSendoEditado = null;
         let isUpdating = false; // Trava de atualização para evitar conflitos durante operações
         let requestQueue = []; // Fila de requisições para processar sequencialmente
@@ -898,6 +1177,51 @@
                  return `${h.padStart(2, '0')}:${m}`;
              }
              return 'N/A';
+        }
+        
+        /**
+         * Limpa o horário para garantir formato HH:mm como string pura.
+         * Backend já envia hora como texto (ex.: "16:00") — não aplicar -8h.
+         */
+        function limparHorario(horarioRaw) {
+            if (horarioRaw === null || horarioRaw === undefined || horarioRaw === '') return '00:00';
+            
+            // Valores numéricos (fração de dia do Sheets)
+            if (typeof horarioRaw === 'number' && !isNaN(horarioRaw)) {
+                const totalMinutos = Math.round((horarioRaw % 1) * 24 * 60);
+                const hNum = Math.floor(totalMinutos / 60) % 24;
+                const mNum = totalMinutos % 60;
+                return `${String(hNum).padStart(2, '0')}:${String(mNum).padStart(2, '0')}`;
+            }
+            
+            // Date object: usa hora local sem ajustes manuais
+            if (horarioRaw instanceof Date) {
+                const horas = String(horarioRaw.getHours()).padStart(2, '0');
+                const minutos = String(horarioRaw.getMinutes()).padStart(2, '0');
+                return `${horas}:${minutos}`;
+            }
+            
+            const horarioStr = String(horarioRaw).trim();
+            
+            // Formato ISO: converte para hora local
+            if (horarioStr.includes('T')) {
+                const d = new Date(horarioStr);
+                if (!isNaN(d.getTime())) {
+                    const horas = String(d.getHours()).padStart(2, '0');
+                    const minutos = String(d.getMinutes()).padStart(2, '0');
+                    return `${horas}:${minutos}`;
+                }
+            }
+            
+            // Extrai primeiro HH:mm encontrado em texto
+            const match = horarioStr.match(/(\d{1,2}):(\d{2})/);
+            if (match) {
+                const h = match[1].padStart(2, '0');
+                const m = match[2];
+                return `${h}:${m}`;
+            }
+            
+            return '00:00';
         }
 
         /**
@@ -1171,9 +1495,13 @@
                             dataEntrega = '';
                         }
                         
-                        const horarioEntrega = p.Horario_Entrega || p["Horario da Entrega"] || p.Horario || "";
-                        // Numero deve ser da coluna C (Numero) - mapeamento ultra-resiliente
-                        const numero = p.Numero || p["Numero"] || p.numero || p["numero"] || "N/A";
+                        // Tratamento estrito do horário como String - ignora fuso horário
+                        const horarioEntregaRaw = p.Horario_Entrega || p["Horario da Entrega"] || p.Horario || "";
+                        // Limpa o horário para garantir formato HH:mm como string pura
+                        const horarioEntrega = limparHorario(horarioEntregaRaw);
+                        
+                        // Numero deve ser da coluna C (Numero) - mapeamento simplificado
+                        const numero = p.Numero || p['Numero'] || p.numero || '';
                         const nome = p.Nome_Cliente || p["Nome do Cliente"] || p.Nome || "";
                         const id = p.ID_do_Pedido || p.ID || "";
                         // Normaliza o status para garantir consistência (case-insensitive)
@@ -1192,11 +1520,10 @@
                         let sortDate = new Date(0); 
                         
                         // Cria um Date Object para ordenação (data + horário)
+                        // Usa o horário já limpo (string HH:mm)
                         if (dataParaInput) {
                            try {
-                                const horaFormatada = formatTime(String(horarioEntrega) || '00:00');
-                                // Se formatTime retornar 'N/A', usa '00:00' como padrão
-                                const horaParaOrdenacao = horaFormatada === 'N/A' ? '00:00' : horaFormatada;
+                                const horaParaOrdenacao = horarioEntrega || '00:00';
                                 sortDate = new Date(`${dataParaInput.replace(/-/g, '/')} ${horaParaOrdenacao}`);
                                 
                                 // Verifica se a data é válida
@@ -1215,13 +1542,14 @@
                             Nome_Cliente: String(nome || ''),
                             Numero: String(numero), // Coluna C (Numero) - sempre String
                             Data_Entrega: String(dataEntrega || ''), // Formato DD/MM/YYYY - sempre String
-                            Horario_Entrega: String(horarioEntrega || '00:00'),
+                            Horario_Entrega: horarioEntrega, // Já limpo como string HH:mm
                             Status_do_Pedido: status,
                             Status: status, // Mantém Status para compatibilidade
                             Status_Pagamento: p.Status_Pagamento || p["Status do Pagamento"] || 'Pendente',
                             Total_Final: total,
                             Data_para_Input: dataParaInput, // YYYY-MM-DD (para filtro)
-                            sortDate: sortDate 
+                            sortDate: sortDate,
+                            Observacoes: String(p.Observacoes || p["Observações"] || p.Observacoes || '') // Coluna L
                         };
                     }).filter(p => p.ID_do_Pedido); 
                     
@@ -1237,6 +1565,177 @@
                 console.error("Erro na comunicação com a API (Network/Parsing):", error);
                 alert("Erro de rede ao carregar os pedidos. Verifique o console para detalhes.");
             }
+        }
+
+        // =========================================================================
+        // FUNÇÕES PARA CUSTOS
+        // =========================================================================
+
+        async function fetchCustos() {
+            try {
+                const response = await fetch(`${API_URL}?action=readCustos`);
+                const json = await response.json();
+                
+                if (json.success) {
+                    if (!json.custos || json.custos.length === 0) {
+                        todosOsCustos = [];
+                        renderCustos();
+                        return;
+                    }
+                    
+                    todosOsCustos = json.custos.map(c => {
+                        let dataRaw = c.Data || c["Data"] || "";
+                        let data = '';
+                        
+                        if (dataRaw) {
+                            if (String(dataRaw).includes('T') || dataRaw instanceof Date) {
+                                data = formatISOtoDDMMYYYY(dataRaw);
+                            } else {
+                                data = String(dataRaw).trim();
+                            }
+                        }
+                        
+                        if (!data || data === 'Invalid Date' || data === 'NaN/NaN/NaN') {
+                            data = '';
+                        }
+                        
+                        const dataParaInput = formatDDMMYYYYtoYYYYMMDD(data);
+                        
+                        return {
+                            ...c,
+                            Nome_Item: String(c.Nome_Item || c["Nome do Item"] || c.Item || ''),
+                            Data: String(data || ''),
+                            Data_para_Input: dataParaInput,
+                            Quantidade: parseFloat(c.Quantidade || c["Quantidade"] || 0),
+                            Valor_Unitario: parseFloat(c.Valor_Unitario || c["Valor Unitário"] || 0),
+                            Valor_Total: parseFloat(c.Valor_Total || c["Valor Total"] || 0),
+                            Unidade: String(c.Unidade || c["Unidade"] || ''),
+                            Fornecedor: String(c.Fornecedor || c["Fornecedor"] || ''),
+                            Observacoes: String(c.Observacoes || c["Observações"] || '')
+                        };
+                    });
+                    
+                    renderCustos();
+                } else {
+                    console.error('Erro na resposta da API de custos:', json.error || 'Resposta inválida');
+                    todosOsCustos = [];
+                    renderCustos();
+                }
+            } catch (error) {
+                console.error('Erro ao buscar custos:', error);
+                todosOsCustos = [];
+                renderCustos();
+            }
+        }
+
+        function renderCustos() {
+            const container = document.getElementById('custos-container');
+            if (!container) return;
+            
+            const searchValue = (document.getElementById('search-filter-custos')?.value || '').trim().toLowerCase();
+            const dateFilterValue = document.getElementById('date-filter-custos')?.value || '';
+            
+            let custosVisiveis = todosOsCustos.filter(c => {
+                // Filtro de busca por nome do item
+                if (searchValue) {
+                    const nomeMatch = (c.Nome_Item || '').toLowerCase().includes(searchValue);
+                    if (!nomeMatch) return false;
+                }
+                
+                // Filtro de data (mesma lógica dos pedidos)
+                if (dateFilterValue) {
+                    const [fYear, fMonth, fDay] = dateFilterValue.split('-');
+                    const dateParts = String(c.Data || '').match(/(\d{2})\/(\d{2})\/(\d{4})/);
+                    
+                    if (dateParts) {
+                        const pDay = dateParts[1];
+                        const pMonth = dateParts[2];
+                        const pYear = dateParts[3];
+                        
+                        if (fDay === '01') {
+                            return pMonth === fMonth && pYear === fYear;
+                        } else {
+                            return pDay === fDay && pMonth === fMonth && pYear === fYear;
+                        }
+                    }
+                    return true;
+                }
+                
+                return true;
+            });
+            
+            // Ordena por data (mais recente primeiro)
+            custosVisiveis.sort((a, b) => {
+                const dateA = a.Data_para_Input ? new Date(a.Data_para_Input) : new Date(0);
+                const dateB = b.Data_para_Input ? new Date(b.Data_para_Input) : new Date(0);
+                return dateB - dateA;
+            });
+            
+            // Calcula total geral
+            const totalGeral = custosVisiveis.reduce((sum, c) => sum + (c.Valor_Total || 0), 0);
+            
+            if (custosVisiveis.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #1A2B0F; font-size: 18px; background-color: #F4E6CB; border-radius: 8px;">
+                        ${searchValue || dateFilterValue ? 'Nenhum custo encontrado com os filtros aplicados.' : 'Nenhum custo encontrado.'}
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '<div style="margin-bottom: 20px;">';
+            
+            custosVisiveis.forEach(custo => {
+                html += `
+                    <div class="custo-item">
+                        <div class="custo-item-header">
+                            <div class="custo-item-nome">${custo.Nome_Item || 'Sem nome'}</div>
+                            <div class="custo-item-data">${custo.Data || 'Sem data'}</div>
+                        </div>
+                        <div class="custo-item-detalhes">
+                            ${custo.Quantidade ? `
+                                <div class="custo-detalhe">
+                                    <span class="custo-detalhe-label">Quantidade:</span>
+                                    <span class="custo-detalhe-valor">${custo.Quantidade} ${custo.Unidade || ''}</span>
+                                </div>
+                            ` : ''}
+                            ${custo.Valor_Unitario ? `
+                                <div class="custo-detalhe">
+                                    <span class="custo-detalhe-label">Valor Unitário:</span>
+                                    <span class="custo-detalhe-valor">R$ ${custo.Valor_Unitario.toFixed(2).replace('.', ',')}</span>
+                                </div>
+                            ` : ''}
+                            ${custo.Valor_Total ? `
+                                <div class="custo-detalhe">
+                                    <span class="custo-detalhe-label">Valor Total:</span>
+                                    <span class="custo-detalhe-valor">R$ ${custo.Valor_Total.toFixed(2).replace('.', ',')}</span>
+                                </div>
+                            ` : ''}
+                            ${custo.Fornecedor ? `
+                                <div class="custo-detalhe">
+                                    <span class="custo-detalhe-label">Fornecedor:</span>
+                                    <span class="custo-detalhe-valor">${custo.Fornecedor}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                        ${custo.Observacoes ? `
+                            <div style="margin-top: 10px; padding: 8px; background-color: #E8D5B5; border-radius: 5px; font-size: 0.9em; color: #555;">
+                                <strong>Observações:</strong> ${custo.Observacoes}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+            
+            html += `
+                <div class="custo-total">
+                    <div class="custo-total-label">Total Geral:</div>
+                    <div class="custo-total-valor">R$ ${totalGeral.toFixed(2).replace('.', ',')}</div>
+                </div>
+            `;
+            
+            html += '</div>';
+            container.innerHTML = html;
         }
 
         /**
@@ -1282,26 +1781,42 @@
                         }
                     }
 
-                    // Filtro de data (permite filtrar por dia específico ou mês/ano)
+                    // Filtro de data (permite filtrar por dia específico, mês/ano, ou intervalo)
                     if (dateFilterValue) {
-                        const [fYear, fMonth, fDay] = dateFilterValue.split('-');
+                        const dateFilterInicial = document.getElementById('date-filter-inicial').value;
                         
                         // Extrai a data do pedido (DD/MM/YYYY)
                         const dateParts = String(p.Data_Entrega || p.Data_da_Entrega || '').match(/(\d{2})\/(\d{2})\/(\d{4})/);
 
                         if (dateParts) {
-                            const pDay = dateParts[1];
-                            const pMonth = dateParts[2];
-                            const pYear = dateParts[3];
+                            const pDay = parseInt(dateParts[1]);
+                            const pMonth = parseInt(dateParts[2]);
+                            const pYear = parseInt(dateParts[3]);
                             
-                            // Se o dia selecionado for 01, filtra apenas por mês/ano (filtro padrão)
-                            // Se for outro dia, filtra por dia específico (seleção manual)
-                            if (fDay === '01') {
-                                // Filtra apenas por mês e ano
-                                return pMonth === fMonth && pYear === fYear;
-                            } else {
-                                // Filtra por dia, mês e ano específicos
-                                return pDay === fDay && pMonth === fMonth && pYear === fYear;
+                            // Se houver data inicial (segunda seleção), filtra por intervalo
+                            if (dateFilterInicial && dateFilterInicial !== dateFilterValue) {
+                                const pedidoDate = new Date(pYear, pMonth - 1, pDay);
+                                const [iniYear, iniMonth, iniDay] = dateFilterInicial.split('-').map(Number);
+                                const [finYear, finMonth, finDay] = dateFilterValue.split('-').map(Number);
+                                
+                                const dataInicial = new Date(iniYear, iniMonth - 1, iniDay);
+                                const dataFinal = new Date(finYear, finMonth - 1, finDay);
+                                
+                                // Verifica se a data do pedido está dentro do intervalo (inclusive)
+                                return pedidoDate >= dataInicial && pedidoDate <= dataFinal;
+                            }
+                            // Filtro normal (uma data apenas)
+                            else {
+                                const [fYear, fMonth, fDay] = dateFilterValue.split('-').map(Number);
+                                
+                                // Se o dia selecionado for 01, filtra apenas por mês/ano (filtro padrão)
+                                if (fDay === 1) {
+                                    // Filtra apenas por mês e ano
+                                    return pMonth === fMonth && pYear === fYear;
+                                } else {
+                                    // Filtra por dia, mês e ano específicos
+                                    return pDay === fDay && pMonth === fMonth && pYear === fYear;
+                                }
                             }
                         }
                         return true; // Se a data estiver mal formatada, mostra o pedido em vez de esconder
@@ -1318,18 +1833,37 @@
                 });
 
                 pedidosVisiveis.push(...pedidosNaColuna);
-                header.textContent = `${status} (${pedidosNaColuna.length})`;
+                
+                // Cria container para o texto do header
+                const headerText = document.createElement('span');
+                headerText.className = 'column-header-text';
+                headerText.textContent = `${status} (${pedidosNaColuna.length})`;
+                
+                // Cria checkbox de selecionar todos
+                const selectAllCheckbox = document.createElement('input');
+                selectAllCheckbox.type = 'checkbox';
+                selectAllCheckbox.className = 'column-select-all-checkbox';
+                selectAllCheckbox.title = 'Selecionar todos os itens desta etapa';
+                selectAllCheckbox.onchange = (e) => {
+                    e.stopPropagation(); // Previne que o clique feche/abra a coluna no mobile
+                    if (selectAllCheckbox.checked) {
+                        selectAllInColumn(column);
+                    } else {
+                        deselectAllInColumn(column);
+                    }
+                };
+                
+                header.appendChild(selectAllCheckbox);
+                header.appendChild(headerText);
                 
                 // Adiciona funcionalidade de collapse no mobile
                 if (window.innerWidth <= 768) {
-                    // Por padrão, apenas a primeira coluna está aberta
-                    const isFirstColumn = KANBAN_STATUSES.indexOf(status) === 0;
-                    if (!isFirstColumn) {
-                        column.classList.add('collapsed');
-                        header.classList.add('collapsed');
-                    }
+                    // No mobile, todas as colunas começam fechadas
+                    column.classList.add('collapsed');
+                    header.classList.add('collapsed');
                     
-                    header.addEventListener('click', () => {
+                    // Apenas o texto do header abre/fecha (não o botão)
+                    headerText.addEventListener('click', () => {
                         // Fecha todas as outras colunas
                         document.querySelectorAll('.kanban-column').forEach(col => {
                             if (col !== column) {
@@ -1362,21 +1896,65 @@
         
         /**
          * Recebe apenas a lista de pedidos VISÍVEIS (filtrados).
+         * Se houver tickets selecionados, mostra o total dos selecionados.
+         * Caso contrário, mostra o total do mês vigente (como antes).
          */
         function updateDashboardTotals(pedidosVisiveis) {
             let totalLiquidoGeral = 0;
             let totalPedidosContados = 0;
+            
             const statusToCount = ['Pedido Recebido', 'Pedido Confirmado', 'Aguardando Retirada', 'Entregue'];
-
-            pedidosVisiveis.forEach(p => {
-                 const total = parseFloat(p.Total_Final || 0); 
-                 const statusAtual = p.Status_do_Pedido || p.Status || '';
-                 // Compara case-insensitive com os status que devem ser contados
-                 const deveContar = statusToCount.some(status => statusEquals(statusAtual, status));
-                 if (deveContar) {
-                     totalLiquidoGeral += total;
-                     totalPedidosContados++;
-                 }
+            const dateFilterValue = document.getElementById('date-filter')?.value; // YYYY-MM-DD
+            const dateFilterInicial = document.getElementById('date-filter-inicial')?.value; // YYYY-MM-DD ou vazio
+            
+            // Helper para parsear data do pedido (DD/MM/YYYY)
+            const parseDataPedido = (pedido) => {
+                const parts = String(pedido.Data_Entrega || pedido.Data_da_Entrega || '').match(/(\d{2})\/(\d{2})\/(\d{4})/);
+                if (!parts) return null;
+                const day = parseInt(parts[1], 10);
+                const month = parseInt(parts[2], 10) - 1;
+                const year = parseInt(parts[3], 10);
+                return new Date(year, month, day);
+            };
+            
+            // Determina janela de datas para somar quando não houver filtro explícito
+            const montarRangePadraoMesVigente = () => {
+                const hoje = new Date();
+                const inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+                const fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+                return { inicio, fim };
+            };
+            
+            // Decide quais pedidos entram no cálculo:
+            // 1) Se houver tickets selecionados: apenas selecionados
+            // 2) Se existir filtro de data: usa os pedidosVisiveis (já filtrados)
+            // 3) Sem seleção e sem filtro: usa apenas pedidos do mês vigente
+            let pedidosParaSomar = [];
+            
+            if (selectedTickets && selectedTickets.size > 0) {
+                selectedTickets.forEach(id => {
+                    const pedido = todosOsPedidos.find(p => p.ID_do_Pedido === id);
+                    if (pedido) pedidosParaSomar.push(pedido);
+                });
+            } else if (dateFilterValue) {
+                pedidosParaSomar = pedidosVisiveis; // já respeita o filtro de data aplicado na tela
+            } else {
+                const { inicio, fim } = montarRangePadraoMesVigente();
+                pedidosParaSomar = pedidosVisiveis.filter(p => {
+                    const data = parseDataPedido(p);
+                    if (!data) return false;
+                    return data >= inicio && data <= fim;
+                });
+            }
+            
+            pedidosParaSomar.forEach(p => {
+                const total = parseFloat(p.Total_Final || 0); 
+                const statusAtual = p.Status_do_Pedido || p.Status || '';
+                const deveContar = statusToCount.some(status => statusEquals(statusAtual, status));
+                if (deveContar) {
+                    totalLiquidoGeral += total;
+                    totalPedidosContados++;
+                }
             });
 
             document.querySelector('#dashboard-totals strong').textContent = `R$ ${totalLiquidoGeral.toFixed(2).replace('.', ',')}`;
@@ -1398,10 +1976,12 @@
             
             // Usa os campos mapeados no fetchPedidos
             const data = pedido.Data_Entrega || 'N/A'; // DD/MM/AAAA
-            const hora = formatTime(pedido.Horario_Entrega || '00:00'); 
+            // Horário já vem limpo como string HH:mm do fetchPedidos - usa diretamente sem conversão
+            const hora = pedido.Horario_Entrega || '00:00'; 
 
             const nomeCliente = pedido.Nome_Cliente || 'N/A';
             const statusPagamento = pedido.Status_Pagamento || 'Pendente';
+            const temObservacoes = pedido.Observacoes && pedido.Observacoes.trim() !== '';
             
             // Adiciona classe de cor de fundo baseada no status de pagamento
             let classePagamento = '';
@@ -1414,7 +1994,9 @@
             }
             
             // Define as classes do card (status do pedido)
-            card.className = `pedido-card status-${sanitizedStatus}`;
+            // Adiciona classe para observações se houver
+            const classeObservacao = temObservacoes ? ' com-observacao' : '';
+            card.className = `pedido-card status-${sanitizedStatus}${classeObservacao}`;
 
             // Cria opções do select de status de etapa
             const statusOptions = KANBAN_STATUSES.map(s => 
@@ -1424,7 +2006,8 @@
             card.innerHTML = `
                 <input type="checkbox" class="card-checkbox" data-pedido-id="${pedido.ID_do_Pedido}" onchange="toggleTicketSelection(this)">
                 <br>
-                <div class="card-id">${pedido.ID_do_Pedido}</div>
+                <div class="card-id">${pedido.ID_do_Pedido}${temObservacoes ? ' <span class="card-obs-badge">⚠️ OBS</span>' : ''}</div>
+                ${temObservacoes ? '<div class="card-observacao-alerta">⚠️ Possui Observação</div>' : ''}
                 <div class="card-title">${nomeCliente}</div>
                 <div class="card-detail"><strong>Data de entrega:</strong> ${data}</div>
                 <div class="card-detail"><strong>Horário de entrega:</strong> ${hora}</div>
@@ -1659,7 +2242,8 @@
             
             // Usa os campos mapeados no fetchPedidos
             const data = pedido.Data_Entrega || 'N/A';
-            const hora = formatTime(pedido.Horario_Entrega || '00:00');
+            // Horário já vem limpo como string HH:mm do fetchPedidos - usa diretamente
+            const hora = pedido.Horario_Entrega || '00:00';
             const dataHora = `${data} às ${hora}`;
             
             // Preenche o cabeçalho e detalhes - usa os campos mapeados
@@ -1670,7 +2254,9 @@
             document.getElementById('pedido-id').textContent = id;
             document.getElementById('detail-nome').textContent = nomeCliente;
             // Sincronização do Modal - usa o campo correto pedido.Numero
-            document.getElementById('detail-numero').textContent = pedido.Numero || 'N/A';
+            // Garante que não exiba "N/A" - se vazio, exibe string vazia
+            const numeroDisplay = (pedido.Numero && pedido.Numero.trim() !== '' && pedido.Numero.trim() !== 'N/A') ? pedido.Numero : '';
+            document.getElementById('detail-numero').textContent = numeroDisplay || '';
             document.getElementById('detail-data').textContent = data;
             document.getElementById('detail-horario').textContent = hora;
             document.getElementById('detail-pagamento').textContent = pedido.Forma_de_Pagamento || pedido.Forma_Pagamento || 'N/A';
@@ -1678,12 +2264,28 @@
             document.getElementById('detail-cupom').textContent = cupom;
             document.getElementById('detail-total-final').textContent = `R$ ${totalFormatado}`;
             document.getElementById('detail-resumo-itens').textContent = extractResumoItens(pedido.Resumo_dos_Itens || '');
+            
+            // Exibe Observações se existirem
+            const observacoes = pedido.Observacoes || '';
+            const observacoesGroup = document.getElementById('detail-observacoes-group');
+            if (observacoes && observacoes.trim() !== '') {
+                document.getElementById('detail-observacoes').textContent = observacoes;
+                observacoesGroup.style.display = 'block';
+            } else {
+                observacoesGroup.style.display = 'none';
+            }
 
             // Preenche o formulário de edição usando os campos mapeados
             document.getElementById('edit-nome').value = nomeCliente;
-            document.getElementById('edit-numero').value = pedido.Numero || '';
+            // Garante que o campo Numero mostre campo limpo se for 'N/A' ou vazio
+            const numeroParaInput = (pedido.Numero && pedido.Numero.trim() !== '' && pedido.Numero.trim() !== 'N/A') ? pedido.Numero : '';
+            document.getElementById('edit-numero').value = numeroParaInput;
             document.getElementById('edit-data').value = pedido.Data_Entrega || ''; // DD/MM/AAAA - usa campo mapeado
-            document.getElementById('edit-horario').value = formatTime(pedido.Horario_Entrega || '00:00'); // HH:MM - usa campo mapeado
+            
+            // Tratamento de Horário no Carregamento - Horário já vem limpo do fetchPedidos
+            // Usa diretamente o valor já formatado como string HH:mm
+            const horarioParaInput = pedido.Horario_Entrega || '00:00';
+            document.getElementById('edit-horario').value = horarioParaInput; // HH:MM formatado
             document.getElementById('edit-pagamento').value = pedido.Forma_de_Pagamento || pedido.Forma_Pagamento || 'Pix';
             document.getElementById('edit-status-pagamento').value = statusPagamento;
             document.getElementById('edit-cupom').value = cupom;
@@ -1696,8 +2298,6 @@
             document.getElementById('modal-details').style.display = 'block';
             document.querySelector('.modal-actions').style.display = 'block';
             editForm.style.display = 'none';
-            // Ativa a aba padrão "Resumo de Pedidos"
-            switchTab('resumo-pedidos');
         }
 
         function closeModal() {
@@ -1706,11 +2306,31 @@
             document.getElementById('modal-details').style.display = 'block';
             document.querySelector('.modal-actions').style.display = 'block';
             editForm.style.display = 'none';
-            // Reseta para a aba padrão ao fechar
-            switchTab('resumo-pedidos');
         }
 
         // Função para alternar entre as abas
+        function switchMainTab(tabName) {
+            // Remove a classe active de todos os botões e conteúdos
+            document.querySelectorAll('.main-tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelectorAll('.main-tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Adiciona a classe active ao botão e conteúdo selecionados
+            const button = document.querySelector(`.main-tab-button[onclick="switchMainTab('${tabName}')"]`);
+            const content = document.getElementById(`main-tab-${tabName}`);
+            
+            if (button) button.classList.add('active');
+            if (content) content.classList.add('active');
+            
+            // Carrega dados quando a aba é aberta
+            if (tabName === 'custos') {
+                fetchCustos();
+            }
+        }
+        
         function switchTab(tabName) {
             // Remove active de todos os botões e painéis
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
@@ -1761,60 +2381,98 @@
         }
         
         async function updatePedidoData() {
-            // Pega os dados do formulário de edição
-            // Status do Pedido não é editável - mantém o valor atual do pedido
-            const statusToSheet = pedidoSendoEditado.Status_do_Pedido || pedidoSendoEditado.Status || 'Pedido Recebido';
-            const dataToSheet = document.getElementById('edit-data').value; // DD/MM/AAAA
-            // Garante que o horário esteja sempre no formato HH:MM
-            const horaInput = document.getElementById('edit-horario').value; // Input type="time" retorna HH:MM
-            const horaToSheet = formatTime(horaInput) !== 'N/A' ? formatTime(horaInput) : horaInput || '00:00';
-            const nomeToSheet = document.getElementById('edit-nome').value;
-            const numeroToSheet = document.getElementById('edit-numero').value;
-            const totalToSheet = document.getElementById('edit-total').value; 
+            // 1. BLOQUEIO DE REFRESH - Define isUpdating = true no início
+            isUpdating = true;
+            
+            // 2. CAPTURA IMEDIATA - Captura todos os valores dos campos do formulário
+            const nomeToSheet = document.getElementById('edit-nome').value.trim();
+            const numeroToSheet = document.getElementById('edit-numero').value.trim();
+            const dataToSheet = document.getElementById('edit-data').value.trim(); // DD/MM/AAAA
+            
+            // Tratamento de Horário no Salvamento - Força o horário a ser apenas texto HH:mm
+            const h = String(document.getElementById('edit-horario').value).substring(0, 5);
+            const horarioParaEnviar = h;
+            
             const pagamentoToSheet = document.getElementById('edit-pagamento').value;
             const statusPagamentoToSheet = document.getElementById('edit-status-pagamento').value;
-            const cupomToSheet = document.getElementById('edit-cupom').value;
+            const cupomToSheet = document.getElementById('edit-cupom').value.trim();
+            const totalToSheet = document.getElementById('edit-total').value;
             
-            // O Resumo é pego da variável original (já que é readonly)
-            const resumoToSheet = pedidoSendoEditado.Resumo_dos_Itens || pedidoSendoEditado.Resumo_dos_Itens || ''; 
-
-            // 1. LÓGICA OTIMISTA - Atualiza o pedido local imediatamente
+            // Status do Pedido não é editável - mantém o valor atual do pedido
+            const statusToSheet = pedidoSendoEditado.Status_do_Pedido || pedidoSendoEditado.Status || 'Pedido Recebido';
+            
+            // 3. SINCRONIZAÇÃO LOCAL (OTIMISTA) - Localiza o pedido e atualiza todos os campos
             const pedido = todosOsPedidos.find(p => p.ID_do_Pedido === pedidoSendoEditado.ID_do_Pedido);
-            if (pedido) {
-                pedido.Nome_Cliente = nomeToSheet;
-                pedido.Numero = String(numeroToSheet || '');
-                pedido.Data_Entrega = String(dataToSheet || '');
-                pedido.Horario_Entrega = horaToSheet;
-                pedido.Total_Final = totalToSheet;
-                pedido.Forma_de_Pagamento = pagamentoToSheet;
-                pedido.Status_Pagamento = statusPagamentoToSheet;
-                pedido.Cupom = cupomToSheet;
-                pedido.Status_do_Pedido = statusToSheet;
-                pedido.Status = statusToSheet;
+            if (!pedido) {
+                isUpdating = false;
+                showToast('Erro: Pedido não encontrado.', true);
+                return;
             }
             
-            // 2. Re-renderiza imediatamente
+            // Atualiza todos os campos do pedido no array local com horário formatado
+            pedido.Nome_Cliente = nomeToSheet;
+            pedido.Numero = String(numeroToSheet || '');
+            pedido.Data_Entrega = String(dataToSheet || '');
+            pedido.Horario_Entrega = horarioParaEnviar; // Usa horário formatado
+            pedido.Total_Final = totalToSheet;
+            pedido.Forma_de_Pagamento = pagamentoToSheet;
+            pedido.Status_Pagamento = statusPagamentoToSheet;
+            pedido.Cupom = cupomToSheet;
+            pedido.Status_do_Pedido = statusToSheet;
+            pedido.Status = statusToSheet; // Mantém compatibilidade
+            // Preserva Observacoes se existir (não há campo de edição, então mantém o valor atual)
+            if (pedidoSendoEditado.Observacoes !== undefined) {
+                pedido.Observacoes = pedidoSendoEditado.Observacoes;
+            }
+            
+            // Atualiza campos auxiliares para ordenação e filtros
+            const dataParaInput = formatDDMMYYYYtoYYYYMMDD(dataToSheet);
+            pedido.Data_para_Input = dataParaInput;
+            
+            // Atualiza sortDate para ordenação usando horário formatado
+            let sortDate = new Date(0);
+            if (dataParaInput) {
+                try {
+                    const horaParaOrdenacao = horarioParaEnviar || '00:00';
+                    sortDate = new Date(`${dataParaInput.replace(/-/g, '/')} ${horaParaOrdenacao}`);
+                    if (isNaN(sortDate.getTime())) {
+                        sortDate = new Date(0);
+                    }
+                } catch(e) {
+                    sortDate = new Date(0);
+                }
+            }
+            pedido.sortDate = sortDate;
+            
+            // 4. REFLEXO VISUAL IMEDIATO - Renderiza e fecha o modal instantaneamente
             renderKanban();
             showToast('Salvo!');
             closeModal();
             
-            // 3. Prepara os dados para envio à planilha
+            // 5. ENVIO EM FUNDO (FILA) - Monta formData com chaves exatas esperadas pela planilha
             const formData = new URLSearchParams();
             formData.append('action', 'updateData');
-            formData.append('id', pedidoSendoEditado.ID_do_Pedido);
+            formData.append('id', pedidoSendoEditado.ID_do_Pedido); // Chave 'id' minúscula (compat)
+            formData.append('ID_do_Pedido', pedidoSendoEditado.ID_do_Pedido); // Chave da planilha
             formData.append('Nome_Cliente', nomeToSheet);
-            formData.append('Numero', String(numeroToSheet || '')); // Garante String
-            formData.append('Data_Entrega', String(dataToSheet || '')); // Garante String
-            formData.append('Horario_Entrega', horaToSheet);
-            formData.append('Total_Final', totalToSheet); 
+            formData.append('Numero', String(numeroToSheet || ''));
+            formData.append('Data_Entrega', dataToSheet); // Usa a data capturada e formatada
+            formData.append('Horario_Entrega', horarioParaEnviar); // Usa horário formatado
+            formData.append('Total_Final', totalToSheet);
             formData.append('Forma_de_Pagamento', pagamentoToSheet);
             formData.append('Status_Pagamento', statusPagamentoToSheet);
             formData.append('Cupom', cupomToSheet);
-            formData.append('Resumo_dos_Itens', resumoToSheet); 
-            formData.append('Status_do_Pedido', statusToSheet);
+            // Mantém o status do pedido atual
+            formData.append('Status_do_Pedido', pedidoSendoEditado.Status_do_Pedido);
+             // Adiciona Observacoes se existir no pedido
+            if (pedidoSendoEditado.Observacoes !== undefined) {
+                formData.append('Observacoes', String(pedidoSendoEditado.Observacoes || ''));
+            }
             
-            // 4. Adiciona à fila de requisições (em vez de fetch direto)
+            // 6. ENVIO SILENCIOSO VIA FILA
             addToQueue(formData);
+            // Bloqueia refresh automático por 8 segundos
+            setTimeout(() => { isUpdating = false; }, 8000);
         }
 
 
@@ -1826,17 +2484,24 @@
         // Função para atualizar o display da data no formato brasileiro
         function atualizarDisplayData() {
             const dateFilterInput = document.getElementById('date-filter');
+            const dateFilterInicial = document.getElementById('date-filter-inicial');
             const dateFilterDisplay = document.getElementById('date-filter-display');
             
             if (dateFilterInput.value) {
                 const [ano, mes, dia] = dateFilterInput.value.split('-');
                 
-                // Se for dia 01, mostra apenas MM/AAAA
-                if (dia === '01') {
-                    dateFilterDisplay.value = `${mes}/${ano}`;
+                // Se houver data inicial e for diferente da final, mostra intervalo
+                if (dateFilterInicial.value && dateFilterInicial.value !== dateFilterInput.value) {
+                    const [iniAno, iniMes, iniDia] = dateFilterInicial.value.split('-');
+                    dateFilterDisplay.value = `${iniDia}/${iniMes}/${iniAno} até ${dia}/${mes}/${ano}`;
                 } else {
-                    // Se for outro dia, mostra DD/MM/AAAA
-                    dateFilterDisplay.value = `${dia}/${mes}/${ano}`;
+                    // Se for dia 01, mostra apenas MM/AAAA
+                    if (dia === '01') {
+                        dateFilterDisplay.value = `${mes}/${ano}`;
+                    } else {
+                        // Se for outro dia, mostra DD/MM/AAAA
+                        dateFilterDisplay.value = `${dia}/${mes}/${ano}`;
+                    }
                 }
             } else {
                 dateFilterDisplay.value = '';
@@ -1889,7 +2554,14 @@
             // Adiciona os dias do mês
             const hoje = new Date();
             const dateFilterInput = document.getElementById('date-filter');
+            const dateFilterInicial = document.getElementById('date-filter-inicial');
             const currentValue = dateFilterInput.value ? new Date(dateFilterInput.value + 'T00:00:00') : null;
+            const initialValue = dateFilterInicial.value ? new Date(dateFilterInicial.value + 'T00:00:00') : null;
+            
+            // Verifica se há intervalo selecionado
+            const hasInterval = initialValue && currentValue && initialValue.getTime() !== currentValue.getTime();
+            const dataInicial = hasInterval ? initialValue : null;
+            const dataFinal = hasInterval ? currentValue : null;
             
             for (let day = 1; day <= daysInMonth; day++) {
                 const dayElement = document.createElement('div');
@@ -1903,8 +2575,21 @@
                     dayElement.classList.add('today');
                 }
                 
-                // Marca o dia selecionado
-                if (currentValue && cellDate.toDateString() === currentValue.toDateString()) {
+                // Marca intervalo selecionado
+                if (hasInterval && dataInicial && dataFinal) {
+                    const cellTime = cellDate.getTime();
+                    const iniTime = dataInicial.getTime();
+                    const finTime = dataFinal.getTime();
+                    
+                    if (cellTime === iniTime) {
+                        dayElement.classList.add('selected', 'range-start');
+                    } else if (cellTime === finTime) {
+                        dayElement.classList.add('selected', 'range-end');
+                    } else if (cellTime > iniTime && cellTime < finTime) {
+                        dayElement.classList.add('range-middle');
+                    }
+                } else if (currentValue && cellDate.toDateString() === currentValue.toDateString()) {
+                    // Marca o dia selecionado (quando não há intervalo)
                     dayElement.classList.add('selected');
                 }
                 
@@ -1916,13 +2601,39 @@
             }
         }
 
-        // Função para selecionar uma data
+        // Função para selecionar uma data (suporta intervalo)
         function selectDate(year, month, day) {
             const dateFilterInput = document.getElementById('date-filter');
+            const dateFilterInicial = document.getElementById('date-filter-inicial');
             const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            dateFilterInput.value = formattedDate;
+            
+            // Se não há data inicial, define como inicial
+            if (!dateFilterInicial.value) {
+                dateFilterInicial.value = formattedDate;
+                dateFilterInput.value = formattedDate;
+            } else {
+                const dataInicial = new Date(dateFilterInicial.value + 'T00:00:00');
+                const dataSelecionada = new Date(formattedDate + 'T00:00:00');
+                
+                // Se a data selecionada é anterior à inicial, substitui a inicial
+                if (dataSelecionada < dataInicial) {
+                    dateFilterInicial.value = formattedDate;
+                    dateFilterInput.value = formattedDate;
+                } else if (dataSelecionada.getTime() === dataInicial.getTime()) {
+                    // Se clicar na mesma data, limpa o intervalo (filtra apenas essa data)
+                    dateFilterInicial.value = '';
+                    dateFilterInput.value = formattedDate;
+                } else {
+                    // Define como data final (intervalo)
+                    dateFilterInput.value = formattedDate;
+                }
+            }
+            
             atualizarDisplayData();
+            renderCalendar(); // Re-renderiza para mostrar o intervalo
             renderKanban();
+            
+            // Fecha o calendário após selecionar
             closeDatePicker();
         }
 
@@ -1944,8 +2655,103 @@
             document.getElementById('date-picker-modal').classList.remove('show');
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        // Variável para o calendário de custos
+        let currentCalendarDateCustos = new Date();
+
+        // Função para renderizar o calendário de custos
+        function renderCalendarCustos() {
+            const calendarGrid = document.getElementById('calendar-grid-custos');
+            const monthYearDisplay = document.getElementById('month-year-display-custos');
             
+            const year = currentCalendarDateCustos.getFullYear();
+            const month = currentCalendarDateCustos.getMonth();
+            
+            const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+            monthYearDisplay.textContent = `${monthNames[month]} ${year}`;
+            
+            const firstDay = new Date(year, month, 1);
+            const startingDayOfWeek = firstDay.getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            const weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+            
+            calendarGrid.innerHTML = '';
+            
+            weekdays.forEach(day => {
+                const dayHeader = document.createElement('div');
+                dayHeader.className = 'date-picker-weekday';
+                dayHeader.textContent = day;
+                calendarGrid.appendChild(dayHeader);
+            });
+            
+            for (let i = 0; i < startingDayOfWeek; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'date-picker-day other-month';
+                calendarGrid.appendChild(emptyDay);
+            }
+            
+            const hoje = new Date();
+            const dateFilterInput = document.getElementById('date-filter-custos');
+            const currentValue = dateFilterInput.value ? new Date(dateFilterInput.value + 'T00:00:00') : null;
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'date-picker-day';
+                dayElement.textContent = day;
+                
+                const cellDate = new Date(year, month, day);
+                
+                if (cellDate.toDateString() === hoje.toDateString()) {
+                    dayElement.classList.add('today');
+                }
+                
+                if (currentValue && cellDate.toDateString() === currentValue.toDateString()) {
+                    dayElement.classList.add('selected');
+                }
+                
+                dayElement.addEventListener('click', () => {
+                    selectDateCustos(year, month, day);
+                });
+                
+                calendarGrid.appendChild(dayElement);
+            }
+        }
+
+        // Função para selecionar uma data nos custos
+        function selectDateCustos(year, month, day) {
+            const dateFilterInput = document.getElementById('date-filter-custos');
+            const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            dateFilterInput.value = formattedDate;
+            
+            const [y, m] = formattedDate.split('-');
+            const dateFilterDisplay = document.getElementById('date-filter-custos-display');
+            if (dateFilterDisplay) {
+                dateFilterDisplay.value = `${m}/${y}`;
+            }
+            
+            renderCustos();
+            closeDatePickerCustos();
+        }
+
+        // Função para abrir o calendário de custos
+        function openDatePickerCustos() {
+            const dateFilterInput = document.getElementById('date-filter-custos');
+            if (dateFilterInput.value) {
+                const [year, month, day] = dateFilterInput.value.split('-');
+                currentCalendarDateCustos = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+            } else {
+                currentCalendarDateCustos = new Date();
+            }
+            renderCalendarCustos();
+            document.getElementById('date-picker-modal-custos').classList.add('show');
+        }
+
+        // Função para fechar o calendário de custos
+        function closeDatePickerCustos() {
+            document.getElementById('date-picker-modal-custos').classList.remove('show');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
             const dateFilterInput = document.getElementById('date-filter');
             const dateFilterDisplay = document.getElementById('date-filter-display');
             
@@ -1975,6 +2781,7 @@
             
             document.getElementById('btn-limpar').addEventListener('click', () => {
                 dateFilterInput.value = '';
+                document.getElementById('date-filter-inicial').value = '';
                 atualizarDisplayData();
                 renderKanban();
                 closeDatePicker();
@@ -1986,6 +2793,7 @@
                 const month = String(hoje.getMonth() + 1).padStart(2, '0');
                 const day = String(hoje.getDate()).padStart(2, '0');
                 dateFilterInput.value = `${year}-${month}-${day}`;
+                document.getElementById('date-filter-inicial').value = '';
                 atualizarDisplayData();
                 renderKanban();
                 closeDatePicker();
@@ -1997,6 +2805,7 @@
                 const month = String(hoje.getMonth() + 1).padStart(2, '0');
                 // Define como primeiro dia do mês (filtro por mês/ano)
                 dateFilterInput.value = `${year}-${month}-01`;
+                document.getElementById('date-filter-inicial').value = '';
                 atualizarDisplayData();
                 renderKanban();
                 closeDatePicker();
@@ -2009,15 +2818,92 @@
                 }
             });
 
-            // Chama a renderização/filtro toda vez que a data é alterada
-            dateFilterInput.addEventListener('change', () => {
-                atualizarDisplayData();
-                renderKanban();
-            });
-            
             // Chama a renderização/filtro toda vez que a busca é alterada
             const searchFilterInput = document.getElementById('search-filter');
-            searchFilterInput.addEventListener('input', renderKanban); 
+            searchFilterInput.addEventListener('input', renderKanban);
+            
+            // Event listeners para filtros de custos
+            const searchFilterCustos = document.getElementById('search-filter-custos');
+            if (searchFilterCustos) {
+                searchFilterCustos.addEventListener('input', renderCustos);
+            }
+            
+            const dateFilterCustos = document.getElementById('date-filter-custos');
+            const dateFilterCustosDisplay = document.getElementById('date-filter-custos-display');
+            if (dateFilterCustos && dateFilterCustosDisplay) {
+                // Inicializa o display da data
+                function atualizarDisplayDataCustos() {
+                    const value = dateFilterCustos.value;
+                    if (value) {
+                        const [year, month] = value.split('-');
+                        dateFilterCustosDisplay.value = `${month}/${year}`;
+                    } else {
+                        dateFilterCustosDisplay.value = '';
+                    }
+                }
+                
+                dateFilterCustos.addEventListener('change', () => {
+                    atualizarDisplayDataCustos();
+                    renderCustos();
+                });
+                
+                dateFilterCustosDisplay.addEventListener('click', () => {
+                    openDatePickerCustos();
+                });
+                
+                // Botões do calendário de custos
+                document.getElementById('prev-month-custos').addEventListener('click', () => {
+                    currentCalendarDateCustos.setMonth(currentCalendarDateCustos.getMonth() - 1);
+                    renderCalendarCustos();
+                });
+                
+                document.getElementById('next-month-custos').addEventListener('click', () => {
+                    currentCalendarDateCustos.setMonth(currentCalendarDateCustos.getMonth() + 1);
+                    renderCalendarCustos();
+                });
+                
+                document.getElementById('btn-limpar-custos').addEventListener('click', () => {
+                    dateFilterCustos.value = '';
+                    atualizarDisplayDataCustos();
+                    renderCustos();
+                    closeDatePickerCustos();
+                });
+                
+                document.getElementById('btn-hoje-custos').addEventListener('click', () => {
+                    const hoje = new Date();
+                    const year = hoje.getFullYear();
+                    const month = String(hoje.getMonth() + 1).padStart(2, '0');
+                    const day = String(hoje.getDate()).padStart(2, '0');
+                    dateFilterCustos.value = `${year}-${month}-${day}`;
+                    atualizarDisplayDataCustos();
+                    renderCustos();
+                    closeDatePickerCustos();
+                });
+                
+                document.getElementById('btn-mes-atual-custos').addEventListener('click', () => {
+                    const hoje = new Date();
+                    const year = hoje.getFullYear();
+                    const month = String(hoje.getMonth() + 1).padStart(2, '0');
+                    dateFilterCustos.value = `${year}-${month}-01`;
+                    atualizarDisplayDataCustos();
+                    renderCustos();
+                    closeDatePickerCustos();
+                });
+                
+                // Fechar calendário de custos ao clicar fora
+                document.getElementById('date-picker-modal-custos').addEventListener('click', (e) => {
+                    if (e.target.id === 'date-picker-modal-custos') {
+                        closeDatePickerCustos();
+                    }
+                });
+                
+                // Define o filtro para o período vigente (primeiro dia do mês atual)
+                const hoje = new Date();
+                const ano = hoje.getFullYear();
+                const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+                dateFilterCustos.value = `${ano}-${mes}-01`;
+                atualizarDisplayDataCustos();
+            } 
             
             // Atualização automática a cada 15 segundos para sincronização com a planilha
             // Só executa se não estiver em operação (isUpdating = false)
@@ -2033,10 +2919,10 @@
                      closeModal();
                  }
             });
-             
+              
             const calculatorModal = document.getElementById('calculator-modal');
             calculatorModal.addEventListener('click', closeCalculatorModal);
-             
+              
             // Inicializa opções do modal de mover
             const bulkMoveSelect = document.getElementById('bulk-move-status');
             KANBAN_STATUSES.forEach(status => {
@@ -2045,7 +2931,7 @@
                 option.textContent = status;
                 bulkMoveSelect.appendChild(option);
             });
-             
+              
         });
 
         // =========================================================================
@@ -2058,6 +2944,7 @@
         function toggleTicketSelection(checkbox) {
             const pedidoId = checkbox.dataset.pedidoId;
             const card = checkbox.closest('.pedido-card');
+            const column = card.closest('.kanban-column');
             
             if (checkbox.checked) {
                 selectedTickets.add(pedidoId);
@@ -2068,6 +2955,71 @@
             }
             
             updateBulkActionsBar();
+            
+            // Atualiza o estado da checkbox do header da coluna
+            if (column) {
+                updateColumnCheckboxState(column);
+            }
+            
+            // Atualiza o dashboard para mostrar total dos selecionados
+            updateDashboardTotals([]);
+        }
+
+        function selectAllInColumn(columnElement) {
+            // Encontra todos os checkboxes dentro desta coluna
+            const checkboxes = columnElement.querySelectorAll('.card-checkbox');
+            
+            checkboxes.forEach(checkbox => {
+                if (!checkbox.checked) {
+                    // Marca o checkbox
+                    checkbox.checked = true;
+                    // Dispara o evento para atualizar a seleção
+                    toggleTicketSelection(checkbox);
+                }
+            });
+            
+            // Atualiza o estado da checkbox do header
+            updateColumnCheckboxState(columnElement);
+        }
+
+        function deselectAllInColumn(columnElement) {
+            // Encontra todos os checkboxes dentro desta coluna
+            const checkboxes = columnElement.querySelectorAll('.card-checkbox');
+            
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    // Desmarca o checkbox
+                    checkbox.checked = false;
+                    // Dispara o evento para atualizar a seleção
+                    toggleTicketSelection(checkbox);
+                }
+            });
+            
+            // Atualiza o estado da checkbox do header
+            updateColumnCheckboxState(columnElement);
+        }
+
+        function updateColumnCheckboxState(columnElement) {
+            const headerCheckbox = columnElement.querySelector('.column-select-all-checkbox');
+            if (!headerCheckbox) return;
+            
+            const checkboxes = columnElement.querySelectorAll('.card-checkbox');
+            const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+            const totalCount = checkboxes.length;
+            
+            if (totalCount === 0) {
+                headerCheckbox.checked = false;
+                headerCheckbox.indeterminate = false;
+            } else if (checkedCount === totalCount) {
+                headerCheckbox.checked = true;
+                headerCheckbox.indeterminate = false;
+            } else if (checkedCount > 0) {
+                headerCheckbox.checked = false;
+                headerCheckbox.indeterminate = true;
+            } else {
+                headerCheckbox.checked = false;
+                headerCheckbox.indeterminate = false;
+            }
         }
 
         function updateBulkActionsBar() {
@@ -2088,7 +3040,13 @@
                 cb.checked = false;
                 cb.closest('.pedido-card').classList.remove('selected');
             });
+            // Atualiza todas as checkboxes dos headers
+            document.querySelectorAll('.kanban-column').forEach(column => {
+                updateColumnCheckboxState(column);
+            });
             updateBulkActionsBar();
+            // Atualiza o dashboard para voltar ao total padrão
+            renderKanban();
         }
 
         function showBulkMoveModal() {
@@ -2202,7 +3160,8 @@
                     
                     message += `*Pedido ${index + 1}*\n\n`;
                     message += `• ${pedido.Nome_Cliente}\n`;
-                    const horaFormatada = formatTime(pedido.Horario_Entrega || '00:00');
+                    // Horário já vem limpo como string HH:mm do fetchPedidos - usa diretamente
+                    const horaFormatada = pedido.Horario_Entrega || '00:00';
                     message += `   ⤷ ${pedido.Data_Entrega} às ${horaFormatada}\n`;
                     message += `   ⤷ ${pedido.ID_do_Pedido}\n\n`;
                     
@@ -2352,7 +3311,8 @@
                 message = `Resumo ${selectedPedidos.length} Pedido(s):\n\n`;
                 message += `*- Clientes:*\n\n`;
                 selectedPedidos.forEach(p => {
-                    const horaFormatada = formatTime(p.Horario_Entrega || '00:00');
+                    // Horário já vem limpo como string HH:mm do fetchPedidos - usa diretamente
+                    const horaFormatada = p.Horario_Entrega || '00:00';
                     message += `• ${p.Nome_Cliente}\n`;
                     message += `   ⤷ ${p.Data_Entrega} às ${horaFormatada}\n`;
                     message += `   ⤷ ${p.ID_do_Pedido}\n\n`;
@@ -2397,7 +3357,6 @@
         }
     </script>
     
-    <!-- Barra de Ações em Lote -->
     <div id="bulk-actions-bar">
         <span id="selected-count">0 selecionados</span>
         <button id="bulk-move-btn" onclick="showBulkMoveModal()">Etapa</button>
@@ -2406,7 +3365,6 @@
         <button onclick="clearSelection()" style="background-color: #e74c3c;">Limpar Seleção</button>
     </div>
 
-    <!-- Modal Mover Para -->
     <div id="bulk-move-modal" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="closeBulkMoveModal()">&times;</span>
@@ -2422,7 +3380,6 @@
         </div>
     </div>
 
-    <!-- Modal Status de Pagamento -->
     <div id="bulk-payment-modal" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="closeBulkPaymentModal()">&times;</span>
@@ -2440,7 +3397,6 @@
         </div>
     </div>
 
-    <!-- Modal Encaminhar -->
     <div id="bulk-send-modal" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="closeBulkSendModal()">&times;</span>
@@ -2459,7 +3415,6 @@
         </div>
     </div>
 
-    <!-- Toast Notification -->
     <div id="toast"></div>
 </body>
 </html>

@@ -156,6 +156,19 @@
             justify-content: space-between;
             align-items: center;
             font-size: 1.1em;
+            cursor: default;
+        }
+        
+        /* Indicador de expansão/colapso no mobile */
+        .column-toggle {
+            display: none;
+            font-size: 1.2em;
+            margin-left: 10px;
+            transition: transform 0.3s;
+        }
+        
+        .kanban-column.collapsed .column-toggle {
+            transform: rotate(-90deg);
         }
         
         .column-select-all-checkbox {
@@ -484,7 +497,37 @@
 
         @media (max-width: 768px) {
             #kanban-board { flex-direction: column; overflow-y: auto; overflow-x: hidden; }
-            .kanban-column { width: 100%; min-width: 100%; margin-bottom: 20px; min-height: 100px;}
+            .kanban-column { 
+                width: 100%; 
+                min-width: 100%; 
+                margin-bottom: 10px; 
+                min-height: auto;
+            }
+            
+            /* Colunas colapsadas por padrão no mobile */
+            .kanban-column .column-content {
+                display: none;
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.3s ease-out;
+            }
+            
+            .kanban-column.expanded .column-content {
+                display: block;
+                max-height: 5000px;
+                transition: max-height 0.3s ease-in;
+            }
+            
+            /* Header clicável no mobile */
+            .column-header {
+                cursor: pointer;
+                user-select: none;
+            }
+            
+            .column-toggle {
+                display: inline-block;
+            }
+            
             header { flex-direction: column; gap: 10px; text-align: center; }
             .filter-bar { flex-direction: column; align-items: stretch; }
             #bulk-actions-bar { width: 90%; flex-wrap: wrap; justify-content: center; bottom: 10px; border-radius: 15px;}
@@ -1088,12 +1131,14 @@
         // ============================================================================
         // LÓGICA DE FILTROS & CALENDÁRIO
         // ============================================================================
+        // Função principal de filtro que filtra os pedidos baseado em texto e/ou data de entrega
+        // Esta função é chamada sempre que há mudança nos filtros (busca de texto ou seleção de data)
         function filtrarPedidos() {
             const texto = document.getElementById('search-input').value.trim().toLowerCase();
             const dataFiltro = document.getElementById('date-input').value; // YYYY-MM-DD ou YYYY-MM-DD,YYYY-MM-DD
 
             const filtrados = todosPedidos.filter(p => {
-                // Filtro de texto (se houver)
+                // Filtro de texto (se houver) - busca por nome do cliente, ID do pedido ou número
                 if (texto) {
                     const matchTexto = 
                         (p.Nome_Cliente || '').toLowerCase().includes(texto) ||
@@ -1104,45 +1149,61 @@
                 }
                 
                 // Filtro de data/intervalo (se houver)
-                if (dataFiltro) {
-                    // Verifica se é intervalo (tem vírgula)
+                // A data do pedido (p.Data_Entrega) vem no formato brasileiro "DD/MM/AAAA"
+                // O filtro (dataFiltro) vem no formato ISO "YYYY-MM-DD" ou "YYYY-MM-DD,YYYY-MM-DD"
+                if (dataFiltro && dataFiltro.trim() !== '') {
+                    // Verifica se é intervalo (tem vírgula) - ex: "2025-12-14,2025-12-20"
                     if (dataFiltro.includes(',')) {
-                        const [dataInicio, dataFim] = dataFiltro.split(',');
-                        const [anoInicio, mesInicio, diaInicio] = dataInicio.split('-');
-                        const [anoFim, mesFim, diaFim] = dataFim.split('-');
+                        const [dataInicioStr, dataFimStr] = dataFiltro.split(',');
+                        const [anoInicio, mesInicio, diaInicio] = dataInicioStr.trim().split('-');
+                        const [anoFim, mesFim, diaFim] = dataFimStr.trim().split('-');
                         
+                        // Cria objetos Date para o intervalo (formato ISO: YYYY-MM-DD)
                         const dataInicioObj = new Date(parseInt(anoInicio), parseInt(mesInicio) - 1, parseInt(diaInicio));
                         const dataFimObj = new Date(parseInt(anoFim), parseInt(mesFim) - 1, parseInt(diaFim));
                         
                         // Converte DD/MM/AAAA do pedido para Date
-                        const dataPedParts = (p.Data_Entrega || '').split('/');
+                        const dataPedParts = (p.Data_Entrega || '').trim().split('/');
                         if(dataPedParts.length === 3) {
-                            const dataPedObj = new Date(parseInt(dataPedParts[2]), parseInt(dataPedParts[1]) - 1, parseInt(dataPedParts[0]));
+                            // Formato brasileiro: DD/MM/AAAA -> Date(ano, mes-1, dia)
+                            const dataPedObj = new Date(
+                                parseInt(dataPedParts[2]),      // ano
+                                parseInt(dataPedParts[1]) - 1,   // mês (Date usa 0-11)
+                                parseInt(dataPedParts[0])        // dia
+                            );
+                            
+                            // Zera as horas para comparação correta (apenas data, sem hora)
                             dataInicioObj.setHours(0, 0, 0, 0);
                             dataFimObj.setHours(0, 0, 0, 0);
                             dataPedObj.setHours(0, 0, 0, 0);
+                            
+                            // Verifica se a data de entrega está dentro do intervalo (inclusivo)
+                            // >= inclui a data inicial, <= inclui a data final
                             return dataPedObj >= dataInicioObj && dataPedObj <= dataFimObj;
                         } else {
+                            // Se a data do pedido não está no formato esperado, exclui do filtro
                             return false;
                         }
                     } else {
-                        // Data única
-                        const dataPedParts = (p.Data_Entrega || '').split('/');
+                        // Data única (formato: YYYY-MM-DD)
+                        const dataPedParts = (p.Data_Entrega || '').trim().split('/');
                         if(dataPedParts.length === 3) {
-                            const dataPedISO = `${dataPedParts[2]}-${dataPedParts[1]}-${dataPedParts[0]}`;
-                            return dataPedISO === dataFiltro;
+                            // Converte DD/MM/AAAA para YYYY-MM-DD para comparação
+                            const dataPedISO = `${dataPedParts[2]}-${dataPedParts[1].padStart(2, '0')}-${dataPedParts[0].padStart(2, '0')}`;
+                            return dataPedISO === dataFiltro.trim();
                         } else {
                             return false;
                         }
                     }
                 }
                 
-                // Se não há filtros, retorna true (mostra todos)
+                // Se não há filtros, retorna true (mostra todos os pedidos)
                 return true;
             });
 
+            // Renderiza apenas os pedidos filtrados no Kanban
             renderizar(filtrados);
-            // Dashboard já é atualizado em renderizar()
+            // O dashboard já é atualizado em renderizar() através de atualizarDashboard()
         }
 
         function filtrarMesAtual() {
@@ -1210,6 +1271,7 @@
         }
         
         // Aplica o filtro de data selecionado
+        // Esta função é chamada quando o usuário clica no botão "Filtrar" do calendário
         function aplicarFiltroData() {
             // Verifica se há um intervalo válido selecionado
             if (!dataInicialIntervalo) {
@@ -1222,16 +1284,27 @@
                 dataFinalIntervalo = new Date(dataInicialIntervalo);
             }
             
+            // Garante que as datas estão com horas zeradas para comparação correta
+            if (dataInicialIntervalo) {
+                dataInicialIntervalo.setHours(0, 0, 0, 0);
+            }
+            if (dataFinalIntervalo) {
+                dataFinalIntervalo.setHours(0, 0, 0, 0);
+            }
+            
             // Atualiza o display com o intervalo selecionado
+            // Isso atualiza o input oculto #date-input com o formato correto (YYYY-MM-DD ou YYYY-MM-DD,YYYY-MM-DD)
             atualizarDisplayData();
             
             // Aplica o filtro e mostra apenas os pedidos com data de entrega no intervalo
+            // A função filtrarPedidos() lê o valor de #date-input e filtra os cards do Kanban
             filtrarPedidos();
             
             // Garante que o dashboard seja atualizado com os totais do período selecionado
+            // Isso recalcula os totais (valor em R$ e quantidade) baseado apenas nos pedidos visíveis
             atualizarDashboard();
             
-            // Feedback visual
+            // Feedback visual para o usuário
             if (dataInicialIntervalo && dataFinalIntervalo) {
                 const diaInicio = String(dataInicialIntervalo.getDate()).padStart(2, '0');
                 const mesInicio = String(dataInicialIntervalo.getMonth() + 1).padStart(2, '0');
@@ -1239,7 +1312,12 @@
                 const diaFim = String(dataFinalIntervalo.getDate()).padStart(2, '0');
                 const mesFim = String(dataFinalIntervalo.getMonth() + 1).padStart(2, '0');
                 const anoFim = dataFinalIntervalo.getFullYear();
-                showToast(`Filtro aplicado: ${diaInicio}/${mesInicio}/${anoInicio} - ${diaFim}/${mesFim}/${anoFim}`);
+                
+                if (dataInicialIntervalo.getTime() === dataFinalIntervalo.getTime()) {
+                    showToast(`Filtro aplicado: ${diaInicio}/${mesInicio}/${anoInicio}`);
+                } else {
+                    showToast(`Filtro aplicado: ${diaInicio}/${mesInicio}/${anoInicio} - ${diaFim}/${mesFim}/${anoFim}`);
+                }
             }
         }
         
@@ -1378,6 +1456,8 @@
             // O filtro só será aplicado quando clicar em "Filtrar"
         }
         
+        // Atualiza o display visual e o input oculto com o intervalo de datas selecionado
+        // Esta função formata as datas e atualiza tanto o campo visível quanto o input oculto usado pelo filtro
         function atualizarDisplayData() {
             if (dataInicialIntervalo && dataFinalIntervalo) {
                 const inicio = dataInicialIntervalo;
@@ -1389,16 +1469,24 @@
                 const mesFim = String(fim.getMonth() + 1).padStart(2, '0');
                 const anoFim = fim.getFullYear();
                 
+                // Atualiza o campo visível com formato brasileiro (DD/MM/AAAA - DD/MM/AAAA)
                 document.getElementById('date-filter-display').value = `${diaInicio}/${mesInicio}/${anoInicio} - ${diaFim}/${mesFim}/${anoFim}`;
-                // Define o valor do input como intervalo (formato: YYYY-MM-DD,YYYY-MM-DD)
-                document.getElementById('date-input').value = `${anoInicio}-${mesInicio}-${diaInicio},${anoFim}-${mesFim}-${diaFim}`;
+                
+                // Define o valor do input oculto como intervalo no formato ISO (YYYY-MM-DD,YYYY-MM-DD)
+                // Este formato é usado pela função filtrarPedidos() para comparar as datas
+                document.getElementById('date-input').value = `${anoInicio}-${mesInicio.padStart(2, '0')}-${diaInicio.padStart(2, '0')},${anoFim}-${mesFim.padStart(2, '0')}-${diaFim.padStart(2, '0')}`;
             } else if (dataInicialIntervalo) {
                 const dia = String(dataInicialIntervalo.getDate()).padStart(2, '0');
                 const mes = String(dataInicialIntervalo.getMonth() + 1).padStart(2, '0');
                 const ano = dataInicialIntervalo.getFullYear();
+                
+                // Atualiza o campo visível com formato brasileiro (DD/MM/AAAA)
                 document.getElementById('date-filter-display').value = `${dia}/${mes}/${ano}`;
-                document.getElementById('date-input').value = `${ano}-${mes}-${dia}`;
+                
+                // Define o valor do input oculto como data única no formato ISO (YYYY-MM-DD)
+                document.getElementById('date-input').value = `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
             } else {
+                // Limpa os campos se não há data selecionada
                 document.getElementById('date-filter-display').value = '';
                 document.getElementById('date-input').value = '';
             }
@@ -1791,9 +1879,14 @@
                 if (linhaTrim.startsWith('-') && !linhaTrim.includes('⤷') && !linhaTrim.match(/^-\s*\d/)) {
                     categoriaAtual = linhaTrim.replace(/^-\s*/, '').trim();
                 } 
-                // Detecta item: linha que começa com "⤷" (pode ter espaços antes)
-                else if (linhaTrim.includes('⤷')) {
-                    const itemTexto = linhaTrim.replace(/.*⤷\s*/, '').trim();
+                // Detecta item: linha que começa com "⤷" ou já está no formato "quantidade un. - item"
+                else if (linhaTrim.includes('⤷') || linhaTrim.match(/^\d+\s*un\.\s*-/)) {
+                    // Remove "⤷" se existir e mantém o formato "quantidade un. - item"
+                    let itemTexto = linhaTrim.replace(/.*⤷\s*/, '').trim();
+                    // Se não tem o formato "quantidade un. -", adiciona "1 un. -" no início
+                    if (!itemTexto.match(/^\d+\s*un\.\s*-/)) {
+                        itemTexto = `1 un. - ${itemTexto}`;
+                    }
                     if (itemTexto && categoriaAtual) {
                         itens.push({
                             categoria: categoriaAtual,
@@ -1820,7 +1913,7 @@
                 const emoji = obterEmojiCupom(p);
                 texto += `   ⤷ ${p.ID_do_Pedido}${emoji ? ' ' + emoji : ''}\n\n`;
                 
-                texto += `Itens:\n\n`;
+                texto += `*- Itens:*\n\n`;
                 
                 const itens = processarItensResumo(p.Resumo_dos_Itens);
                 let categoriaAtual = '';
@@ -1828,9 +1921,11 @@
                 itens.forEach(item => {
                     if (item.categoria !== categoriaAtual) {
                         categoriaAtual = item.categoria;
-                        texto += `- ${categoriaAtual}\n`;
+                        texto += `*- ${categoriaAtual}*\n`;
                     }
-                    texto += ` ⤷ ${item.item}\n`;
+                    // Remove "⤷" se existir e formata como "1 un. - [item]"
+                    let itemFormatado = item.item.replace(/^⤷\s*/, '').trim();
+                    texto += `${itemFormatado}\n`;
                 });
                 
                 // Se não conseguiu processar itens, mostra o resumo original
@@ -1916,10 +2011,10 @@
             });
             
             // Monta texto dos itens agrupados
-            texto += `- Itens:\n\n`;
+            texto += `*- Itens:*\n\n`;
             
             Object.keys(itensAgrupados).sort().forEach(categoria => {
-                texto += `- ${categoria}\n`;
+                texto += `*- ${categoria}*\n`;
                 
                 const itensCategoria = itensAgrupados[categoria];
                 Object.keys(itensCategoria).sort().forEach(nomeItem => {

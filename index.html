@@ -67,6 +67,21 @@
         }
         #dashboard-totals strong { display: block; font-size: 1.4em; color: var(--cor-laranja-forte); }
         #dashboard-totals span { font-size: 0.9em; color: #555; }
+        
+        /* Tag de Pagamento no Card */
+        .payment-type-tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 8px;
+            font-size: 0.7em;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        .payment-type-tag.pix { background-color: #32CD32; color: white; }
+        .payment-type-tag.dinheiro { background-color: #FFD700; color: #333; }
+        .payment-type-tag.cartao { background-color: #4169E1; color: white; }
 
         /* BARRA DE FILTROS */
         .filter-bar {
@@ -80,15 +95,47 @@
             flex-shrink: 0;
         }
 
-        .search-filter, .date-filter {
+        .filter-group-main {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .filter-group-additional {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            margin-left: 40px; /* Espaçamento entre os grupos */
+        }
+
+        .search-filter, .date-filter, .payment-filter, .payment-method-filter, .observation-filter {
             display: flex;
             flex-direction: column;
             gap: 5px;
             flex: 0 0 auto;
-            min-width: 250px;
+            min-width: 200px;
+        }
+        
+        .filter-bar select {
+            padding: 8px 12px;
+            border: 1px solid #5a9bd4;
+            border-radius: 15px;
+            font-family: inherit;
+            color: var(--cor-texto);
+            background-color: #fff;
+            width: 100%;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        
+        .filter-bar select:focus {
+            outline: none;
+            border-color: #5a9bd4;
         }
 
-        .search-filter label, .date-filter label {
+        .search-filter label, .date-filter label, .payment-filter label, .payment-method-filter label, .observation-filter label {
             color: #333;
             font-size: 0.9em;
             font-weight: normal;
@@ -220,7 +267,13 @@
         .status-Pedido-Confirmado { border-left-color: var(--cor-laranja-forte); }
         .status-Aguardando-Retirada { border-left-color: #9b59b6; }
         .status-Entregue { border-left-color: var(--cor-verde); }
-        .status-Cancelado { border-left-color: var(--cor-vermelho); opacity: 0.8; }
+        .status-Cancelado { 
+            border-left-color: var(--cor-vermelho); 
+            opacity: 0.5; 
+        }
+        .status-Cancelado * {
+            opacity: 1; /* Mantém o conteúdo interno com opacidade total para legibilidade */
+        }
 
         /* Cabeçalho do Card (Checkbox e ID) */
         .card-header {
@@ -295,6 +348,10 @@
             color: var(--cor-texto); 
             font-size: 0.9em;
             margin-top: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
         }
 
         /* Select de Pagamento no Card com Fundo Colorido */
@@ -396,7 +453,7 @@
             border: none; 
             font-size: 24px; 
             cursor: pointer; 
-            color: #1a5f3f; /* Verde escuro */
+            color: #1a5f3f; /* Verde escuro */ 
             padding: 5px 10px;
             border-radius: 8px;
             transition: background-color 0.2s;
@@ -530,6 +587,11 @@
             
             header { flex-direction: column; gap: 10px; text-align: center; }
             .filter-bar { flex-direction: column; align-items: stretch; }
+            .filter-group-main, .filter-group-additional { 
+                flex-direction: column; 
+                margin-left: 0; 
+                gap: 15px; 
+            }
             #bulk-actions-bar { width: 90%; flex-wrap: wrap; justify-content: center; bottom: 10px; border-radius: 15px;}
         }
     </style>
@@ -550,15 +612,45 @@
     </header>
 
     <div class="filter-bar">
-        <div class="search-filter">
-            <label>Buscar</label>
-            <input type="text" id="search-input" placeholder="ID do pedido, nome ou número do cliente" oninput="filtrarPedidos()">
+        <div class="filter-group-main">
+            <div class="search-filter">
+                <label>Buscar</label>
+                <input type="text" id="search-input" placeholder="ID do pedido, nome ou número do cliente" oninput="filtrarPedidos()">
+            </div>
+            <div class="date-filter">
+                <label>Data de Entrega</label>
+                <input type="hidden" id="date-input" onchange="filtrarPedidos()">
+                <input type="hidden" id="date-filter-inicial" value="">
+                <input type="text" id="date-filter-display" readonly placeholder="Filtrar por Data" onclick="openDatePicker()" style="background:white; cursor:pointer;">
+            </div>
         </div>
-        <div class="date-filter">
-            <label>Data de Entrega</label>
-            <input type="date" id="date-input" onchange="filtrarPedidos()" style="display:none;">
-            <input type="hidden" id="date-filter-inicial" value="">
-            <input type="text" id="date-filter-display" readonly placeholder="Filtrar por Data" onclick="openDatePicker()" style="background:white; cursor:pointer;">
+        <div class="filter-group-additional">
+            <div class="payment-filter">
+                <label>Status Pagamento</label>
+                <select id="filter-status-pagamento" onchange="filtrarPedidos()">
+                    <option value="">Todos</option>
+                    <option value="Pagamento pendente">Pagamento pendente</option>
+                    <option value="Pago 50%">Pago 50%</option>
+                    <option value="Pago 100%">Pago 100%</option>
+                </select>
+            </div>
+            <div class="payment-method-filter">
+                <label>Forma Pagamento</label>
+                <select id="filter-forma-pagamento" onchange="filtrarPedidos()">
+                    <option value="">Todas</option>
+                    <option value="Pix">Pix</option>
+                    <option value="Dinheiro">Dinheiro</option>
+                    <option value="Cartão">Cartão</option>
+                </select>
+            </div>
+            <div class="observation-filter">
+                <label>Observação</label>
+                <select id="filter-observacao" onchange="filtrarPedidos()">
+                    <option value="">Todos</option>
+                    <option value="com">Com Observação</option>
+                    <option value="sem">Sem Observação</option>
+                </select>
+            </div>
         </div>
     </div>
 
@@ -631,8 +723,8 @@
                 <label>Observações:</label>
                 <textarea id="edit-obs" rows="3"></textarea>
                 
-                <label>Itens do Pedido (Leitura):</label>
-                <textarea id="edit-resumo" rows="4" style="background:#eee; font-size:0.85em;" readonly></textarea>
+                <label>Itens do Pedido:</label>
+                <textarea id="edit-resumo" rows="4" style="font-size:0.85em;"></textarea>
 
                 <div class="modal-actions" style="justify-content: center;">
                     <button type="button" class="btn-cancel" onclick="fecharModal()">Cancelar</button>
@@ -711,7 +803,7 @@
                     📋 Lista de pedidos
                 </button>
                 <button class="btn-save" onclick="gerarResumoItens()" style="width: 100%; padding: 12px; background-color: var(--cor-fundo-azul);">
-                    📦 Itens
+                    📦 Lista de itens
                 </button>
             </div>
             <div class="modal-actions" style="justify-content: center;">
@@ -724,7 +816,7 @@
         // ============================================================================
         // CONFIGURAÇÃO
         // ============================================================================
-        const API_URL = "https://script.google.com/macros/s/AKfycbxh3eXo5cEoft0GAeO4wioz1ZdiSYMlgG2PU_c38EKjY-JewWH36G8uCIj9L5hgZOrmBA/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbxCz6Fj_3vIp0DHUsf9m7zYi3fjGx_zNqsXY4-nvXJwuZbkV7Pw1PTBDTngrV-AP9Y0/exec";
 
         const STATUS_FLOW = [
             'Pedido Recebido',
@@ -740,6 +832,51 @@
         let currentCalendarDate = new Date();
         let dataInicialIntervalo = null;
         let dataFinalIntervalo = null;
+
+        // ============================================================================
+        // FUNÇÕES AUXILIARES DE DATA
+        // ============================================================================
+        /**
+         * Converte data no formato brasileiro "DD/MM/AAAA" para objeto Date
+         * com horas zeradas (00:00:00)
+         */
+        function parseDataBR(dataString) {
+            if (!dataString || typeof dataString !== 'string') return null;
+            
+            const partes = dataString.trim().split('/');
+            if (partes.length !== 3) return null;
+            
+            const dia = parseInt(partes[0], 10);
+            const mes = parseInt(partes[1], 10) - 1; // Mês é 0-indexed
+            const ano = parseInt(partes[2], 10);
+            
+            if (isNaN(dia) || isNaN(mes) || isNaN(ano)) return null;
+            
+            const data = new Date(ano, mes, dia);
+            data.setHours(0, 0, 0, 0);
+            return data;
+        }
+
+        /**
+         * Converte data no formato ISO "YYYY-MM-DD" para objeto Date
+         * com horas zeradas (00:00:00)
+         */
+        function parseDataISO(dataString) {
+            if (!dataString || typeof dataString !== 'string') return null;
+            
+            const partes = dataString.trim().split('-');
+            if (partes.length !== 3) return null;
+            
+            const ano = parseInt(partes[0], 10);
+            const mes = parseInt(partes[1], 10) - 1; // Mês é 0-indexed
+            const dia = parseInt(partes[2], 10);
+            
+            if (isNaN(dia) || isNaN(mes) || isNaN(ano)) return null;
+            
+            const data = new Date(ano, mes, dia);
+            data.setHours(0, 0, 0, 0);
+            return data;
+        }
 
         // ============================================================================
         // INICIALIZAÇÃO
@@ -818,23 +955,90 @@
             }
         }
 
+        /**
+         * Função auxiliar para converter horário HH:MM em minutos para comparação
+         */
+        function parseHorario(horarioStr) {
+            if (!horarioStr || typeof horarioStr !== 'string') return 0;
+            
+            const partes = horarioStr.trim().split(':');
+            if (partes.length !== 2) return 0;
+            
+            const horas = parseInt(partes[0], 10);
+            const minutos = parseInt(partes[1], 10);
+            
+            if (isNaN(horas) || isNaN(minutos)) return 0;
+            
+            return horas * 60 + minutos; // Retorna total de minutos
+        }
+
+        /**
+         * Função de ordenação: ordena pedidos por data e horário de entrega
+         */
+        function ordenarPedidosPorDataHorario(pedidos) {
+            return pedidos.sort((a, b) => {
+                // Primeiro compara por data de entrega
+                const dataA = parseDataBR(a.Data_Entrega);
+                const dataB = parseDataBR(b.Data_Entrega);
+                
+                // Se não há data, coloca no final
+                if (!dataA && !dataB) return 0;
+                if (!dataA) return 1;
+                if (!dataB) return -1;
+                
+                // Compara datas usando getTime()
+                const diffData = dataA.getTime() - dataB.getTime();
+                
+                // Se as datas são diferentes, retorna a diferença
+                if (diffData !== 0) return diffData;
+                
+                // Se as datas são iguais, compara por horário
+                const horarioA = parseHorario(a.Horario_Entrega);
+                const horarioB = parseHorario(b.Horario_Entrega);
+                
+                return horarioA - horarioB;
+            });
+        }
+
         function renderizar(pedidosParaExibir) {
             // Limpa colunas
             document.querySelectorAll('.column-content').forEach(el => el.innerHTML = '');
             const contadores = {};
             STATUS_FLOW.forEach(s => contadores[s] = 0);
 
+            // Agrupa pedidos por status
+            const pedidosPorStatus = {};
+            STATUS_FLOW.forEach(status => {
+                pedidosPorStatus[status] = [];
+            });
+
+            // Agrupa os pedidos por status
             pedidosParaExibir.forEach(pedido => {
                 const status = pedido.Status_do_Pedido || 'Pedido Recebido';
                 let statusNormalizado = STATUS_FLOW.find(s => s.toLowerCase() === status.toLowerCase()) || 'Pedido Recebido';
                 
-                const colId = `col-${limparString(statusNormalizado)}`;
+                if (!pedidosPorStatus[statusNormalizado]) {
+                    pedidosPorStatus[statusNormalizado] = [];
+                }
+                pedidosPorStatus[statusNormalizado].push(pedido);
+            });
+
+            // Ordena e renderiza os pedidos de cada status
+            STATUS_FLOW.forEach(status => {
+                const pedidosDoStatus = pedidosPorStatus[status] || [];
+                
+                // Ordena os pedidos por data e horário de entrega
+                const pedidosOrdenados = ordenarPedidosPorDataHorario([...pedidosDoStatus]);
+                
+                const colId = `col-${limparString(status)}`;
                 const coluna = document.getElementById(colId);
 
                 if (coluna) {
-                    const card = criarCardHTML(pedido);
-                    coluna.appendChild(card);
-                    contadores[statusNormalizado]++;
+                    pedidosOrdenados.forEach(pedido => {
+                        const card = criarCardHTML(pedido);
+                        coluna.appendChild(card);
+                        contadores[status]++;
+                    });
                 }
             });
 
@@ -847,37 +1051,18 @@
             atualizarDashboard();
         }
 
-        // Função para obter pedidos do período (mês vigente ou filtro de data)
-        function obterPedidosDoPeriodo() {
-            const dataFiltro = document.getElementById('date-input').value; // YYYY-MM-DD
+        // Função para obter pedidos do mês vigente (usado apenas quando não há filtros)
+        function obterPedidosDoMesAtual() {
+            const hoje = new Date();
+            const mesAtual = hoje.getMonth();
+            const anoAtual = hoje.getFullYear();
             
-            if (dataFiltro) {
-                // Se há filtro de data, retorna apenas os pedidos dessa data
-                return todosPedidos.filter(p => {
-                    const dataPedParts = (p.Data_Entrega || '').split('/');
-                    if(dataPedParts.length === 3) {
-                        const dataPedISO = `${dataPedParts[2]}-${dataPedParts[1]}-${dataPedParts[0]}`;
-                        return dataPedISO === dataFiltro;
-                    }
-                    return false;
-                });
-            } else {
-                // Se não há filtro, usa o mês vigente
-                const hoje = new Date();
-                const mesAtual = hoje.getMonth();
-                const anoAtual = hoje.getFullYear();
+            return todosPedidos.filter(p => {
+                const dataPed = parseDataBR(p.Data_Entrega);
+                if (!dataPed) return false;
                 
-                return todosPedidos.filter(p => {
-                    const dataPedParts = (p.Data_Entrega || '').split('/');
-                    if(dataPedParts.length === 3) {
-                        const diaPed = parseInt(dataPedParts[0]);
-                        const mesPed = parseInt(dataPedParts[1]) - 1; // Mês é 0-indexed
-                        const anoPed = parseInt(dataPedParts[2]);
-                        return mesPed === mesAtual && anoPed === anoAtual;
-                    }
-                    return false;
-                });
-            }
+                return dataPed.getMonth() === mesAtual && dataPed.getFullYear() === anoAtual;
+            });
         }
 
         // Função helper para converter string de valor para número
@@ -919,125 +1104,134 @@
 
         // Função helper para calcular valor de um pedido
         // Converte string monetária brasileira (ex: 'R$ 2.530,50') para float
-        // Passos: remove R$, remove espaços, remove pontos de milhar, troca vírgula por ponto
         function calcularValorPedido(pedido) {
             if (!pedido || !pedido.Total_Final) return 0;
             let valor = String(pedido.Total_Final).trim();
             
-            // Se tiver vírgula, assume formato BR (1.000,00) -> remove ponto, troca vírgula por ponto
             if (valor.includes(',')) {
                 valor = valor.replace(/\./g, '').replace(',', '.');
             } 
-            // Se NÃO tiver vírgula, mantém o ponto (formato US/Planilha: 42.00 ou 174.5)
             
-            // Remove tudo que não for dígito ou ponto
             valor = valor.replace(/[^\d.]/g, '');
             return parseFloat(valor) || 0;
         }
 
-        // Função para obter pedidos filtrados (considera busca e data/intervalo)
-        // Retorna:
-        // - Se apenas texto: todos os pedidos do cliente/nome pesquisado (independente da data)
-        // - Se apenas data: todos os pedidos no período selecionado
-        // - Se texto + data: pedidos do cliente/nome pesquisado que estão no período selecionado
+        // Função para obter pedidos filtrados (considera busca, data/intervalo, status pagamento, forma pagamento e observação)
         function obterPedidosFiltrados() {
             const texto = document.getElementById('search-input').value.trim().toLowerCase();
             const dataFiltro = document.getElementById('date-input').value; // YYYY-MM-DD ou YYYY-MM-DD,YYYY-MM-DD
+            const statusPagamento = document.getElementById('filter-status-pagamento').value;
+            const formaPagamento = document.getElementById('filter-forma-pagamento').value;
+            const filtroObservacao = document.getElementById('filter-observacao').value;
 
             return todosPedidos.filter(p => {
-                // Filtro de texto (se houver) - busca por nome do cliente, ID do pedido ou número
+                // Filtro de texto
                 if (texto) {
                     const matchTexto = 
                         (p.Nome_Cliente || '').toLowerCase().includes(texto) ||
                         (p.ID_do_Pedido || '').toLowerCase().includes(texto) ||
                         (p.Numero || '').includes(texto);
                     
-                    // Se não corresponde ao texto, exclui o pedido
                     if (!matchTexto) return false;
                 }
                 
-                // Filtro de data/intervalo (se houver)
-                if (dataFiltro) {
-                    // Verifica se é intervalo (tem vírgula) - ex: "2025-12-14,2025-12-20"
+                // Filtro de data/intervalo
+                if (dataFiltro && dataFiltro.trim() !== '') {
+                    const dataPed = parseDataBR(p.Data_Entrega);
+                    if (!dataPed) return false;
+                    
                     if (dataFiltro.includes(',')) {
-                        const [dataInicio, dataFim] = dataFiltro.split(',');
-                        const [anoInicio, mesInicio, diaInicio] = dataInicio.split('-');
-                        const [anoFim, mesFim, diaFim] = dataFim.split('-');
+                        // Intervalo de datas
+                        const [dataInicioStr, dataFimStr] = dataFiltro.split(',');
+                        const dataInicio = parseDataISO(dataInicioStr.trim());
+                        const dataFim = parseDataISO(dataFimStr.trim());
                         
-                        const dataInicioObj = new Date(parseInt(anoInicio), parseInt(mesInicio) - 1, parseInt(diaInicio));
-                        const dataFimObj = new Date(parseInt(anoFim), parseInt(mesFim) - 1, parseInt(diaFim));
+                        if (!dataInicio || !dataFim) return false;
                         
-                        // Converte DD/MM/AAAA do pedido para Date
-                        const dataPedParts = (p.Data_Entrega || '').split('/');
-                        if(dataPedParts.length === 3) {
-                            const dataPedObj = new Date(parseInt(dataPedParts[2]), parseInt(dataPedParts[1]) - 1, parseInt(dataPedParts[0]));
-                            dataInicioObj.setHours(0, 0, 0, 0);
-                            dataFimObj.setHours(0, 0, 0, 0);
-                            dataPedObj.setHours(0, 0, 0, 0);
-                            // Retorna true se a data do pedido está dentro do intervalo
-                            return dataPedObj >= dataInicioObj && dataPedObj <= dataFimObj;
+                        // Comparação usando getTime() (inclusivo: >= inicio e <= fim)
+                        if (!(dataPed.getTime() >= dataInicio.getTime() && dataPed.getTime() <= dataFim.getTime())) {
+                            return false;
                         }
-                        return false;
                     } else {
                         // Data única
-                        const dataPedParts = (p.Data_Entrega || '').split('/');
-                        if(dataPedParts.length === 3) {
-                            const dataPedISO = `${dataPedParts[2]}-${dataPedParts[1]}-${dataPedParts[0]}`;
-                            return dataPedISO === dataFiltro;
+                        const dataFiltroObj = parseDataISO(dataFiltro.trim());
+                        if (!dataFiltroObj) return false;
+                        
+                        // Comparação usando getTime()
+                        if (dataPed.getTime() !== dataFiltroObj.getTime()) {
+                            return false;
                         }
+                    }
+                }
+                
+                // Filtro de Status de Pagamento
+                if (statusPagamento && statusPagamento.trim() !== '') {
+                    const statusPed = (p.Status_Pagamento || 'Pagamento pendente').trim();
+                    if (statusPed !== statusPagamento) {
                         return false;
                     }
                 }
                 
-                // Se passou por todos os filtros aplicados, inclui o pedido
-                // (se há apenas texto, retorna todos os pedidos que correspondem ao texto)
-                // (se há apenas data, retorna todos os pedidos no período)
-                // (se há texto + data, retorna apenas os que correspondem a ambos)
+                // Filtro de Forma de Pagamento
+                if (formaPagamento && formaPagamento.trim() !== '') {
+                    const formaPed = (p.Forma_de_Pagamento || '').trim();
+                    if (formaPed !== formaPagamento) {
+                        return false;
+                    }
+                }
+                
+                // Filtro de Observação
+                if (filtroObservacao && filtroObservacao.trim() !== '') {
+                    const temObs = p.Observacoes && p.Observacoes.trim() !== '';
+                    if (filtroObservacao === 'com' && !temObs) {
+                        return false;
+                    }
+                    if (filtroObservacao === 'sem' && temObs) {
+                        return false;
+                    }
+                }
+                
                 return true;
             });
         }
 
-        // Atualiza o dashboard com os totais baseados nos filtros aplicados:
-        // - Se há pedidos selecionados: mostra totais apenas dos selecionados
-        // - Se há filtro de período (ex: 14/12/2025 - 20/12/2025): mostra totais apenas do período
-        // - Se há busca por cliente: mostra totais de todos os pedidos do cliente
-        // - Se há busca + período: mostra totais dos pedidos do cliente no período
-        // - Se não há filtros: mostra totais do mês vigente
+        // Atualiza o dashboard com os totais baseados nos pedidos visíveis após o filtro
+        // EXCLUI pedidos CANCELADOS do valor financeiro, mas inclui na contagem
         function atualizarDashboard() {
             let pedidosParaCalcular = [];
             let totalValor = 0;
             let totalPedidos = 0;
 
-            // Prioridade 1: Se há pedidos selecionados, usa APENAS os selecionados
+            const texto = document.getElementById('search-input').value.trim();
+            const dataFiltro = document.getElementById('date-input').value;
+
+            // Prioridade 1: Se há pedidos selecionados manualmente (via checkbox)
             if (ticketsSelecionados.size > 0) {
                 pedidosParaCalcular = todosPedidos.filter(p => ticketsSelecionados.has(p.ID_do_Pedido));
             } else {
-                // Prioridade 2: Verifica se há filtros ativos (busca ou data)
-                const texto = document.getElementById('search-input').value.trim();
-                const dataFiltro = document.getElementById('date-input').value;
-                
-                if (texto || dataFiltro) {
-                    // Se há filtros, usa os pedidos filtrados
-                    // - Apenas texto: todos os pedidos do cliente pesquisado
-                    // - Apenas data: todos os pedidos no período selecionado
-                    // - Texto + data: pedidos do cliente no período selecionado
+                // Prioridade 2: Usa a mesma lógica de filtrarPedidos para obter os pedidos visíveis
+                // Se o campo de busca tiver texto OU o campo de data tiver valor: busca em todo histórico
+                // Se ambos estiverem vazios: usa o mês vigente
+                if (texto || (dataFiltro && dataFiltro.trim() !== '')) {
                     pedidosParaCalcular = obterPedidosFiltrados();
                 } else {
-                    // Prioridade 3: Se não há filtros nem seleção, usa o mês vigente (padrão)
-                    pedidosParaCalcular = obterPedidosDoPeriodo();
+                    // Se não há filtros nem seleção, usa o mês vigente (padrão)
+                    pedidosParaCalcular = obterPedidosDoMesAtual();
                 }
             }
 
-            // Calcula total e contagem (excluindo pedidos cancelados do valor financeiro)
+            // Calcula total e contagem baseado nos pedidos visíveis
             pedidosParaCalcular.forEach(pedido => {
                 const status = pedido.Status_do_Pedido || 'Pedido Recebido';
-                const statusNormalizado = STATUS_FLOW.find(s => s.toLowerCase() === status.toLowerCase()) || 'Pedido Recebido';
+                const statusLower = (status || '').toLowerCase();
                 
-                // Não inclui pedidos cancelados no total financeiro, mas conta no total de pedidos
-                if (statusNormalizado !== 'Cancelado') {
+                // Contagem: inclui todos os pedidos visíveis (incluindo cancelados)
+                totalPedidos++;
+                
+                // Valor financeiro: EXCLUI pedidos onde Status_do_Pedido contém "Cancelado" (case insensitive)
+                if (!statusLower.includes('cancelado')) {
                     totalValor += calcularValorPedido(pedido);
                 }
-                totalPedidos++;
             });
 
             // Atualiza o dashboard com os valores calculados
@@ -1070,6 +1264,27 @@
             let pgClass = 'pg-pendente';
             if(pgStatus.includes('50%')) pgClass = 'pg-parcial';
             if(pgStatus.includes('100%') || pgStatus === 'pago') pgClass = 'pg-pago';
+
+            // Determina o tipo de pagamento para a tag
+            const formaPagamento = (pedido.Forma_de_Pagamento || '').trim();
+            let tipoPagamentoTag = '';
+            let tipoPagamentoClasse = '';
+            if (formaPagamento) {
+                const formaNormalizada = formaPagamento.toLowerCase();
+                if (formaNormalizada.includes('pix')) {
+                    tipoPagamentoTag = 'PIX';
+                    tipoPagamentoClasse = 'pix';
+                } else if (formaNormalizada.includes('dinheiro')) {
+                    tipoPagamentoTag = 'DINHEIRO';
+                    tipoPagamentoClasse = 'dinheiro';
+                } else if (formaNormalizada.includes('cartão') || formaNormalizada.includes('cartao')) {
+                    tipoPagamentoTag = 'CARTÃO';
+                    tipoPagamentoClasse = 'cartao';
+                } else {
+                    tipoPagamentoTag = formaPagamento.toUpperCase();
+                    tipoPagamentoClasse = formaNormalizada.replace(/[^a-z0-9]/g, '');
+                }
+            }
 
             // HTML DO CARD IGUAL A IMAGEM
             card.innerHTML = `
@@ -1115,7 +1330,10 @@
                 </div>
                 ` : ''}
                 
-                <div class="card-price">Total do valor: ${formatarValorComCentavos(pedido.Total_Final)}</div>
+                <div class="card-price">
+                    <span>Total do valor: ${formatarValorComCentavos(pedido.Total_Final)}</span>
+                    ${tipoPagamentoTag ? `<span class="payment-type-tag ${tipoPagamentoClasse}">${tipoPagamentoTag}</span>` : ''}
+                </div>
 
                 <div class="card-status-pagamento">
                     <select class="${pgClass}" onchange="atualizarStatusPagamentoDireto('${pedido.ID_do_Pedido}', this)">
@@ -1131,76 +1349,115 @@
         // ============================================================================
         // LÓGICA DE FILTROS & CALENDÁRIO
         // ============================================================================
-        // Função principal de filtro que filtra os pedidos baseado em texto e/ou data de entrega
-        // Esta função é chamada sempre que há mudança nos filtros (busca de texto ou seleção de data)
+        
+        // Função principal de filtro que filtra os pedidos baseado em texto, data, status pagamento, forma pagamento e observação
         function filtrarPedidos() {
-            const texto = document.getElementById('search-input').value.trim().toLowerCase();
+            const texto = document.getElementById('search-input').value.trim();
             const dataFiltro = document.getElementById('date-input').value; // YYYY-MM-DD ou YYYY-MM-DD,YYYY-MM-DD
-
-            const filtrados = todosPedidos.filter(p => {
-                // Filtro de texto (se houver) - busca por nome do cliente, ID do pedido ou número
+            const statusPagamento = document.getElementById('filter-status-pagamento').value;
+            const formaPagamento = document.getElementById('filter-forma-pagamento').value;
+            const filtroObservacao = document.getElementById('filter-observacao').value;
+            
+            // ============================================================================
+            // 1. DEFINIÇÃO DO ESCOPO (BASE DE DADOS)
+            // ============================================================================
+            // Verifica se há texto na busca OU se há data selecionada
+            // Se houver: escopo = todosPedidos (todo o histórico)
+            // Se NÃO houver: escopo = pedidos do mês e ano correntes
+            let escopoInicial = [];
+            
+            if (texto || (dataFiltro && dataFiltro.trim() !== '')) {
+                // Há texto ou data: busca em todo o histórico
+                escopoInicial = todosPedidos;
+            } else {
+                // Não há texto nem data: usa apenas pedidos do mês atual
+                escopoInicial = obterPedidosDoMesAtual();
+            }
+            
+            // ============================================================================
+            // 2. APLICAÇÃO DOS FILTROS (CASCATA)
+            // ============================================================================
+            // Aplica todos os filtros acumulativamente sobre o escopo inicial
+            const textoLower = texto.toLowerCase();
+            const temDataFiltro = dataFiltro && dataFiltro.trim() !== '';
+            const temStatusPagamento = statusPagamento && statusPagamento.trim() !== '';
+            const temFormaPagamento = formaPagamento && formaPagamento.trim() !== '';
+            const temFiltroObservacao = filtroObservacao && filtroObservacao.trim() !== '';
+            
+            const filtrados = escopoInicial.filter(p => {
+                // Filtro de Texto (se houver)
                 if (texto) {
                     const matchTexto = 
-                        (p.Nome_Cliente || '').toLowerCase().includes(texto) ||
-                        (p.ID_do_Pedido || '').toLowerCase().includes(texto) ||
+                        (p.Nome_Cliente || '').toLowerCase().includes(textoLower) ||
+                        (p.ID_do_Pedido || '').toLowerCase().includes(textoLower) ||
                         (p.Numero || '').includes(texto);
                     
                     if (!matchTexto) return false;
                 }
                 
-                // Filtro de data/intervalo (se houver)
-                // A data do pedido (p.Data_Entrega) vem no formato brasileiro "DD/MM/AAAA"
-                // O filtro (dataFiltro) vem no formato ISO "YYYY-MM-DD" ou "YYYY-MM-DD,YYYY-MM-DD"
-                if (dataFiltro && dataFiltro.trim() !== '') {
-                    // Verifica se é intervalo (tem vírgula) - ex: "2025-12-14,2025-12-20"
+                // Filtro de Data/Intervalo (se houver)
+                if (temDataFiltro) {
+                    const dataPed = parseDataBR(p.Data_Entrega);
+                    if (!dataPed) return false;
+                    
                     if (dataFiltro.includes(',')) {
+                        // Intervalo de datas
                         const [dataInicioStr, dataFimStr] = dataFiltro.split(',');
-                        const [anoInicio, mesInicio, diaInicio] = dataInicioStr.trim().split('-');
-                        const [anoFim, mesFim, diaFim] = dataFimStr.trim().split('-');
+                        const dataInicio = parseDataISO(dataInicioStr.trim());
+                        const dataFim = parseDataISO(dataFimStr.trim());
                         
-                        // Cria objetos Date para o intervalo (formato ISO: YYYY-MM-DD)
-                        const dataInicioObj = new Date(parseInt(anoInicio), parseInt(mesInicio) - 1, parseInt(diaInicio));
-                        const dataFimObj = new Date(parseInt(anoFim), parseInt(mesFim) - 1, parseInt(diaFim));
+                        if (!dataInicio || !dataFim) return false;
                         
-                        // Converte DD/MM/AAAA do pedido para Date
-                        const dataPedParts = (p.Data_Entrega || '').trim().split('/');
-                        if(dataPedParts.length === 3) {
-                            // Formato brasileiro: DD/MM/AAAA -> Date(ano, mes-1, dia)
-                            const dataPedObj = new Date(
-                                parseInt(dataPedParts[2]),      // ano
-                                parseInt(dataPedParts[1]) - 1,   // mês (Date usa 0-11)
-                                parseInt(dataPedParts[0])        // dia
-                            );
-                            
-                            // Zera as horas para comparação correta (apenas data, sem hora)
-                            dataInicioObj.setHours(0, 0, 0, 0);
-                            dataFimObj.setHours(0, 0, 0, 0);
-                            dataPedObj.setHours(0, 0, 0, 0);
-                            
-                            // Verifica se a data de entrega está dentro do intervalo (inclusivo)
-                            // >= inclui a data inicial, <= inclui a data final
-                            return dataPedObj >= dataInicioObj && dataPedObj <= dataFimObj;
-                        } else {
-                            // Se a data do pedido não está no formato esperado, exclui do filtro
+                        // Comparação usando getTime() (inclusivo: >= inicio e <= fim)
+                        if (!(dataPed.getTime() >= dataInicio.getTime() && dataPed.getTime() <= dataFim.getTime())) {
                             return false;
                         }
                     } else {
-                        // Data única (formato: YYYY-MM-DD)
-                        const dataPedParts = (p.Data_Entrega || '').trim().split('/');
-                        if(dataPedParts.length === 3) {
-                            // Converte DD/MM/AAAA para YYYY-MM-DD para comparação
-                            const dataPedISO = `${dataPedParts[2]}-${dataPedParts[1].padStart(2, '0')}-${dataPedParts[0].padStart(2, '0')}`;
-                            return dataPedISO === dataFiltro.trim();
-                        } else {
+                        // Data única
+                        const dataFiltroObj = parseDataISO(dataFiltro.trim());
+                        if (!dataFiltroObj) return false;
+                        
+                        // Comparação usando getTime()
+                        if (dataPed.getTime() !== dataFiltroObj.getTime()) {
                             return false;
                         }
                     }
                 }
                 
-                // Se não há filtros, retorna true (mostra todos os pedidos)
+                // Filtro de Status de Pagamento (se houver)
+                if (temStatusPagamento) {
+                    const statusPed = (p.Status_Pagamento || 'Pagamento pendente').trim();
+                    if (statusPed !== statusPagamento) {
+                        return false;
+                    }
+                }
+                
+                // Filtro de Forma de Pagamento (se houver)
+                if (temFormaPagamento) {
+                    const formaPed = (p.Forma_de_Pagamento || '').trim();
+                    if (formaPed !== formaPagamento) {
+                        return false;
+                    }
+                }
+                
+                // Filtro de Observação (se houver)
+                if (temFiltroObservacao) {
+                    const temObs = p.Observacoes && p.Observacoes.trim() !== '';
+                    if (filtroObservacao === 'com' && !temObs) {
+                        return false;
+                    }
+                    if (filtroObservacao === 'sem' && temObs) {
+                        return false;
+                    }
+                }
+                
+                // Passou em todos os filtros aplicados
                 return true;
             });
-
+            
+            // ============================================================================
+            // 3. RESULTADO
+            // ============================================================================
             // Renderiza apenas os pedidos filtrados no Kanban
             renderizar(filtrados);
             // O dashboard já é atualizado em renderizar() através de atualizarDashboard()
@@ -1224,8 +1481,6 @@
             atualizarDisplayData();
             renderCalendar();
             filtrarPedidos();
-            // Garante que o dashboard seja atualizado com os totais do período
-            atualizarDashboard();
             closeDatePicker();
         }
 
@@ -1233,6 +1488,9 @@
             document.getElementById('search-input').value = '';
             document.getElementById('date-input').value = '';
             document.getElementById('date-filter-display').value = '';
+            document.getElementById('filter-status-pagamento').value = '';
+            document.getElementById('filter-forma-pagamento').value = '';
+            document.getElementById('filter-observacao').value = '';
             dataInicialIntervalo = null;
             dataFinalIntervalo = null;
             filtrarPedidos();
@@ -1271,9 +1529,7 @@
         }
         
         // Aplica o filtro de data selecionado
-        // Esta função é chamada quando o usuário clica no botão "Filtrar" do calendário
         function aplicarFiltroData() {
-            // Verifica se há um intervalo válido selecionado
             if (!dataInicialIntervalo) {
                 showToast("Selecione pelo menos uma data para filtrar!", true);
                 return;
@@ -1284,27 +1540,12 @@
                 dataFinalIntervalo = new Date(dataInicialIntervalo);
             }
             
-            // Garante que as datas estão com horas zeradas para comparação correta
-            if (dataInicialIntervalo) {
-                dataInicialIntervalo.setHours(0, 0, 0, 0);
-            }
-            if (dataFinalIntervalo) {
-                dataFinalIntervalo.setHours(0, 0, 0, 0);
-            }
+            if (dataInicialIntervalo) dataInicialIntervalo.setHours(0, 0, 0, 0);
+            if (dataFinalIntervalo) dataFinalIntervalo.setHours(0, 0, 0, 0);
             
-            // Atualiza o display com o intervalo selecionado
-            // Isso atualiza o input oculto #date-input com o formato correto (YYYY-MM-DD ou YYYY-MM-DD,YYYY-MM-DD)
             atualizarDisplayData();
-            
-            // Aplica o filtro e mostra apenas os pedidos com data de entrega no intervalo
-            // A função filtrarPedidos() lê o valor de #date-input e filtra os cards do Kanban
             filtrarPedidos();
             
-            // Garante que o dashboard seja atualizado com os totais do período selecionado
-            // Isso recalcula os totais (valor em R$ e quantidade) baseado apenas nos pedidos visíveis
-            atualizarDashboard();
-            
-            // Feedback visual para o usuário
             if (dataInicialIntervalo && dataFinalIntervalo) {
                 const diaInicio = String(dataInicialIntervalo.getDate()).padStart(2, '0');
                 const mesInicio = String(dataInicialIntervalo.getMonth() + 1).padStart(2, '0');
@@ -1364,24 +1605,20 @@
                 const currentDate = new Date(year, month, day);
                 currentDate.setHours(0, 0, 0, 0);
                 
-                // Define a classe base primeiro
                 dayEl.className = 'date-picker-day';
                 dayEl.textContent = day;
                 
-                // Adiciona evento de clique
                 dayEl.addEventListener('click', (e) => {
                     e.stopPropagation();
                     selecionarData(year, month, day);
                 });
                 
-                // Verifica se é hoje
                 const hoje = new Date();
                 hoje.setHours(0, 0, 0, 0);
                 if (currentDate.getTime() === hoje.getTime()) {
                     dayEl.classList.add('today');
                 }
                 
-                // Verifica se está no intervalo selecionado
                 if (dataInicialIntervalo && dataFinalIntervalo) {
                     const inicio = new Date(dataInicialIntervalo);
                     const fim = new Date(dataFinalIntervalo);
@@ -1400,7 +1637,6 @@
                     inicio.setHours(0, 0, 0, 0);
                     if (currentDate.getTime() === inicio.getTime()) {
                         dayEl.classList.add('selected');
-                        // Remove classes de intervalo se não estiver em um
                         dayEl.classList.remove('range-start', 'range-end', 'in-range');
                     }
                 }
@@ -1408,7 +1644,6 @@
                 calendarGrid.appendChild(dayEl);
             }
             
-            // Adiciona células vazias no final para completar a grade (6 semanas = 42 células)
             const totalCells = startingDayOfWeek + daysInMonth;
             const remainingCells = 42 - totalCells;
             for(let i=0; i<remainingCells; i++) {
@@ -1422,42 +1657,32 @@
             const selectedDate = new Date(year, month, day);
             selectedDate.setHours(0, 0, 0, 0);
             
-            // Se já tem intervalo completo (inicial e final), reinicia a seleção
             if (dataInicialIntervalo && dataFinalIntervalo) {
                 dataInicialIntervalo = selectedDate;
                 dataFinalIntervalo = null;
             }
-            // Se não há data inicial, define como inicial
             else if (!dataInicialIntervalo) {
                 dataInicialIntervalo = selectedDate;
                 dataFinalIntervalo = null;
             }
-            // Se há data inicial mas não há final
             else if (!dataFinalIntervalo) {
-                // Se a data selecionada é anterior à inicial, troca (inicial vira final)
                 if (selectedDate < dataInicialIntervalo) {
                     dataFinalIntervalo = new Date(dataInicialIntervalo);
                     dataInicialIntervalo = selectedDate;
                 } else {
-                    // Se a data selecionada é igual à inicial, limpa tudo
                     if (selectedDate.getTime() === dataInicialIntervalo.getTime()) {
                         dataInicialIntervalo = null;
                         dataFinalIntervalo = null;
                     } else {
-                        // Define como final
                         dataFinalIntervalo = selectedDate;
                     }
                 }
             }
             
-            // Atualiza o display (mas não aplica o filtro ainda)
             atualizarDisplayData();
             renderCalendar();
-            // O filtro só será aplicado quando clicar em "Filtrar"
         }
         
-        // Atualiza o display visual e o input oculto com o intervalo de datas selecionado
-        // Esta função formata as datas e atualiza tanto o campo visível quanto o input oculto usado pelo filtro
         function atualizarDisplayData() {
             if (dataInicialIntervalo && dataFinalIntervalo) {
                 const inicio = dataInicialIntervalo;
@@ -1469,24 +1694,16 @@
                 const mesFim = String(fim.getMonth() + 1).padStart(2, '0');
                 const anoFim = fim.getFullYear();
                 
-                // Atualiza o campo visível com formato brasileiro (DD/MM/AAAA - DD/MM/AAAA)
                 document.getElementById('date-filter-display').value = `${diaInicio}/${mesInicio}/${anoInicio} - ${diaFim}/${mesFim}/${anoFim}`;
-                
-                // Define o valor do input oculto como intervalo no formato ISO (YYYY-MM-DD,YYYY-MM-DD)
-                // Este formato é usado pela função filtrarPedidos() para comparar as datas
                 document.getElementById('date-input').value = `${anoInicio}-${mesInicio.padStart(2, '0')}-${diaInicio.padStart(2, '0')},${anoFim}-${mesFim.padStart(2, '0')}-${diaFim.padStart(2, '0')}`;
             } else if (dataInicialIntervalo) {
                 const dia = String(dataInicialIntervalo.getDate()).padStart(2, '0');
                 const mes = String(dataInicialIntervalo.getMonth() + 1).padStart(2, '0');
                 const ano = dataInicialIntervalo.getFullYear();
                 
-                // Atualiza o campo visível com formato brasileiro (DD/MM/AAAA)
                 document.getElementById('date-filter-display').value = `${dia}/${mes}/${ano}`;
-                
-                // Define o valor do input oculto como data única no formato ISO (YYYY-MM-DD)
                 document.getElementById('date-input').value = `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
             } else {
-                // Limpa os campos se não há data selecionada
                 document.getElementById('date-filter-display').value = '';
                 document.getElementById('date-input').value = '';
             }
@@ -1499,14 +1716,12 @@
             dataFinalIntervalo = null;
             atualizarDisplayData();
             renderCalendar();
-            filtrarPedidos();
-            // Garante que o dashboard seja atualizado
-            atualizarDashboard();
+            aplicarFiltroData(); // Já chama filtrarPedidos e atualizarDashboard
             closeDatePicker();
         }
 
         // ============================================================================
-        // LÓGICA DE EDIÇÃO E ENVIO (FUNCIONAL SITE 2)
+        // LÓGICA DE EDIÇÃO E ENVIO
         // ============================================================================
         function abrirModalEdicao(id) {
             const pedido = todosPedidos.find(p => p.ID_do_Pedido === id);
@@ -1517,7 +1732,6 @@
             document.getElementById('edit-nome').value = pedido.Nome_Cliente;
             document.getElementById('edit-telefone').value = pedido.Numero; 
             
-            // Data formato YYYY-MM-DD
             const dataParts = (pedido.Data_Entrega || '').split('/');
             if(dataParts.length === 3) {
                 document.getElementById('edit-data').value = `${dataParts[2]}-${dataParts[1]}-${dataParts[0]}`;
@@ -1540,14 +1754,12 @@
             document.getElementById('edit-modal').style.display = 'none';
         }
 
-        // SUBMIT DO FORMULÁRIO (SALVA IGUAL SITE 2)
         document.getElementById('edit-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             mostrarLoading(true);
 
             const id = document.getElementById('edit-id').value;
             
-            // Formata Data DD/MM/AAAA e adiciona aspa simples para texto
             const dataInput = document.getElementById('edit-data').value;
             let dataFormatada = "";
             if (dataInput) {
@@ -1555,10 +1767,7 @@
                 dataFormatada = `'${p[2]}/${p[1]}/${p[0]}`;
             }
 
-            // Hora com aspa
             let horaFormatada = `'${document.getElementById('edit-hora').value}`;
-
-            // Total com virgula
             let total = document.getElementById('edit-total').value;
             if(total.includes('.')) total = total.replace('.', ',');
 
@@ -1577,10 +1786,9 @@
                 Cupom: document.getElementById('edit-cupom').value,
                 Observacoes: document.getElementById('edit-obs').value,
                 Status_do_Pedido: pedidoOriginal ? pedidoOriginal.Status_do_Pedido : 'Pedido Recebido',
-                Resumo_dos_Itens: pedidoOriginal ? pedidoOriginal.Resumo_dos_Itens : ''
+                Resumo_dos_Itens: document.getElementById('edit-resumo').value
             };
 
-            // ENVIO DIRETO (SEM FILA) PARA EVITAR BUGS
             try {
                 await fetch(API_URL, {
                     method: "POST",
@@ -1589,7 +1797,6 @@
                     body: JSON.stringify(payload)
                 });
                 
-                // Atualiza local
                 atualizarLocalmente(payload);
                 showToast("Salvo!");
                 fecharModal();
@@ -1600,15 +1807,11 @@
             mostrarLoading(false);
         });
         
-        // Atualiza pagamento direto do card
         async function atualizarStatusPagamentoDireto(id, selectElement) {
              const novoStatus = selectElement.value;
              mostrarLoading(true);
              
-             // Pega dados atuais para não apagar nada
              const pedido = todosPedidos.find(p => p.ID_do_Pedido === id);
-             
-             // Formata Total
              let totalFormatado = String(pedido.Total_Final || '').replace('.', ',');
              
              const payload = {
@@ -1616,7 +1819,7 @@
                 ID_do_Pedido: id,
                 Nome_Cliente: pedido.Nome_Cliente,
                 Numero: pedido.Numero,
-                Data_Entrega: `'${pedido.Data_Entrega}`, // Aspa para manter texto
+                Data_Entrega: `'${pedido.Data_Entrega}`,
                 Horario_Entrega: `'${pedido.Horario_Entrega}`,
                 Total_Final: totalFormatado,
                 Forma_de_Pagamento: pedido.Forma_de_Pagamento,
@@ -1635,7 +1838,6 @@
                     body: JSON.stringify(payload)
                 });
                 
-                // Atualiza local
                 pedido.Status_Pagamento = novoStatus;
                 filtrarPedidos();
                 showToast("Pagamento Atualizado!");
@@ -1659,11 +1861,9 @@
             
             const novoStatus = col.dataset.status;
             
-            // Visual
             const card = document.getElementById(`card-${id}`);
             col.querySelector('.column-content').appendChild(card);
             
-            // Envia
             mostrarLoading(true);
             try {
                 await fetch(API_URL, {
@@ -1684,7 +1884,6 @@
             mostrarLoading(false);
         }
 
-        // Seleção Múltipla
         function toggleSelecao(id, checkbox) {
             if(checkbox.checked) ticketsSelecionados.add(id);
             else ticketsSelecionados.delete(id);
@@ -1704,7 +1903,6 @@
             const bar = document.getElementById('bulk-actions-bar');
             document.getElementById('selected-count').textContent = `${ticketsSelecionados.size} itens`;
             bar.style.display = ticketsSelecionados.size > 0 ? 'flex' : 'none';
-            // Atualiza o dashboard quando a seleção muda
             atualizarDashboard();
         }
 
@@ -1713,10 +1911,8 @@
             document.querySelectorAll('.card-checkbox').forEach(cb => cb.checked = false);
             document.querySelectorAll('.column-select-all-checkbox').forEach(cb => cb.checked = false);
             atualizarBarraAcoes();
-            // Dashboard já é atualizado em atualizarBarraAcoes()
         }
 
-        // Bulk Move
         function abrirBulkMove() { document.getElementById('bulk-move-modal').style.display = 'flex'; }
         async function executarBulkMove() {
             const novoStatus = document.getElementById('bulk-move-select').value;
@@ -1739,7 +1935,6 @@
             showToast("Pedidos movidos!");
         }
 
-        // Bulk Payment
         function abrirBulkPayment() { document.getElementById('bulk-payment-modal').style.display = 'flex'; }
         async function executarBulkPayment() {
             const novoStatus = document.getElementById('bulk-payment-select').value;
@@ -1748,7 +1943,6 @@
             const promises = Array.from(ticketsSelecionados).map(id => {
                 const p = todosPedidos.find(pedido => pedido.ID_do_Pedido === id);
                 if(p) {
-                   // Reutiliza a lógica de atualizar dados para o pagamento em lote
                    let totalFormatado = String(p.Total_Final || '').replace('.', ',');
                    const payload = {
                         action: 'updateData', ID_do_Pedido: id,
@@ -1775,7 +1969,6 @@
             showToast("Pagamentos atualizados!");
         }
 
-        // Abre modal de resumos
         function abrirModalResumos() {
             const selecionados = todosPedidos.filter(p => ticketsSelecionados.has(p.ID_do_Pedido));
             if(selecionados.length === 0) {
@@ -1785,12 +1978,10 @@
             document.getElementById('resumos-modal').style.display = 'flex';
         }
 
-        // Fecha modal de resumos
         function fecharModalResumos() {
             document.getElementById('resumos-modal').style.display = 'none';
         }
 
-        // Função auxiliar para obter emoji do cupom (se houver)
         function obterEmojiCupom(pedido) {
             if (pedido.Cupom) {
                 const cupom = pedido.Cupom.toLowerCase();
@@ -1800,70 +1991,51 @@
             return '';
         }
 
-        // Função para extrair informações do cupom (desconto)
         function extrairDescontoCupom(cupomTexto) {
             if (!cupomTexto) return null;
-            
-            // Tenta encontrar percentual (ex: "10%", "15%")
             const percentMatch = cupomTexto.match(/(\d+(?:[.,]\d+)?)%/);
             if (percentMatch) {
-                return {
-                    tipo: 'percentual',
-                    valor: parseFloat(percentMatch[1].replace(',', '.'))
-                };
+                return { tipo: 'percentual', valor: parseFloat(percentMatch[1].replace(',', '.')) };
             }
-            
-            // Tenta encontrar valor fixo (ex: "R$ 20", "20,00", "20.00")
             const valorMatch = cupomTexto.match(/(?:R\$\s*)?(\d+(?:[.,]\d+)?)/);
             if (valorMatch) {
                 let valor = valorMatch[1].replace(',', '.');
-                return {
-                    tipo: 'fixo',
-                    valor: parseFloat(valor)
-                };
+                return { tipo: 'fixo', valor: parseFloat(valor) };
             }
-            
             return null;
         }
 
-        // Função para calcular valores com cupom
         function calcularValoresComCupom(pedido) {
             const totalFinal = calcularValorPedido(pedido);
             const descontoInfo = extrairDescontoCupom(pedido.Cupom);
             
             if (!descontoInfo) {
-                return {
-                    temCupom: !!pedido.Cupom,
-                    valorOriginal: totalFinal,
-                    desconto: 0,
-                    totalFinal: totalFinal
-                };
+                return { temCupom: !!pedido.Cupom, valorOriginal: totalFinal, desconto: 0, totalFinal: totalFinal };
             }
             
             let valorOriginal = 0;
             let desconto = 0;
             
             if (descontoInfo.tipo === 'percentual') {
-                // Se tem desconto percentual, calcula o valor original
-                // totalFinal = valorOriginal * (1 - desconto/100)
-                // valorOriginal = totalFinal / (1 - desconto/100)
                 valorOriginal = totalFinal / (1 - descontoInfo.valor / 100);
                 desconto = valorOriginal - totalFinal;
             } else {
-                // Se tem desconto fixo, o valor original é totalFinal + desconto
                 desconto = descontoInfo.valor;
                 valorOriginal = totalFinal + desconto;
             }
             
-            return {
-                temCupom: true,
-                valorOriginal: valorOriginal,
-                desconto: desconto,
-                totalFinal: totalFinal
-            };
+            return { temCupom: true, valorOriginal: valorOriginal, desconto: desconto, totalFinal: totalFinal };
         }
 
-        // Função auxiliar para processar itens do resumo
+        /**
+         * Processa o texto do campo Resumo_dos_Itens e extrai itens organizados por categoria.
+         * 
+         * Regras:
+         * - Detecta categorias: linhas começando com "-" ou terminando com ":"
+         * - Detecta itens: padrão "Quantidade un. - Nome" ou linhas contendo valores monetários
+         * - Se item detectado sem categoria: atribui categoria "Outros"
+         * - Extrai quantidade via Regex (dígitos antes de "un", "un.", "unidades")
+         */
         function processarItensResumo(resumoItens) {
             if (!resumoItens) return [];
             
@@ -1875,31 +2047,65 @@
                 const linhaTrim = linha.trim();
                 if (!linhaTrim) return;
                 
-                // Detecta categoria: linha que começa com "-" seguido de texto (sem "⤷" e sem número no início)
-                if (linhaTrim.startsWith('-') && !linhaTrim.includes('⤷') && !linhaTrim.match(/^-\s*\d/)) {
+                // Detecção de Categorias:
+                // 1. Linhas começando com "-" (sem ⤷ e sem número no início)
+                // 2. Linhas terminando com ":" (ex: "Bolos Tradicionais:")
+                const ehCategoriaComHifen = linhaTrim.startsWith('-') && !linhaTrim.includes('⤷') && !linhaTrim.match(/^-\s*\d/);
+                const ehCategoriaComDoisPontos = linhaTrim.endsWith(':') && !linhaTrim.includes('⤷');
+                
+                if (ehCategoriaComHifen) {
                     categoriaAtual = linhaTrim.replace(/^-\s*/, '').trim();
                 } 
-                // Detecta item: linha que começa com "⤷" ou já está no formato "quantidade un. - item"
-                else if (linhaTrim.includes('⤷') || linhaTrim.match(/^\d+\s*un\.\s*-/)) {
-                    // Remove "⤷" se existir e mantém o formato "quantidade un. - item"
-                    let itemTexto = linhaTrim.replace(/.*⤷\s*/, '').trim();
-                    // Se não tem o formato "quantidade un. -", adiciona "1 un. -" no início
-                    if (!itemTexto.match(/^\d+\s*un\.\s*-/)) {
-                        itemTexto = `1 un. - ${itemTexto}`;
-                    }
-                    if (itemTexto && categoriaAtual) {
-                        itens.push({
-                            categoria: categoriaAtual,
-                            item: itemTexto
-                        });
+                else if (ehCategoriaComDoisPontos) {
+                    // Remove os dois pontos ao salvar
+                    categoriaAtual = linhaTrim.replace(/:\s*$/, '').trim();
+                }
+                // Detecção de Itens:
+                // Itens seguem padrão "Quantidade un. - Nome" ou contêm valores monetários (R$)
+                else {
+                    // Verifica se é um item: contém "un.", "unidades", "un" com número, ou "R$"
+                    const temQuantidade = linhaTrim.match(/\d+\s*(un\.|unidades|un)\b/i);
+                    const temValorMonetario = linhaTrim.includes('R$');
+                    const temPadraoItem = linhaTrim.match(/^[\w\s]+-\s*\d+/);
+                    const temSeta = linhaTrim.includes('⤷');
+                    
+                    if (temQuantidade || temValorMonetario || temPadraoItem || temSeta) {
+                        // Remove "⤷" se presente
+                        let itemTexto = linhaTrim.replace(/.*⤷\s*/, '').trim();
+                        
+                        // Extrai quantidade usando Regex (dígitos antes de "un", "un.", "unidades")
+                        const quantidadeMatch = itemTexto.match(/(\d+)\s*(un\.|unidades|un)\b/i);
+                        let quantidade = 1;
+                        
+                        if (quantidadeMatch) {
+                            quantidade = parseInt(quantidadeMatch[1], 10) || 1;
+                        }
+                        
+                        // Normaliza o formato do item para "X un. - Nome do Produto"
+                        if (!itemTexto.match(/^\d+\s*un\.\s*-/)) {
+                            // Remove a quantidade existente para reformatar
+                            itemTexto = itemTexto.replace(/\d+\s*(un\.|unidades|un)\s*/gi, '').trim();
+                            // Remove "R$" e valores monetários do final
+                            itemTexto = itemTexto.replace(/\s*R\$\s*[\d.,]+.*$/, '').trim();
+                            // Remove hífens extras
+                            itemTexto = itemTexto.replace(/^-\s*/, '').trim();
+                            
+                            if (itemTexto) {
+                                itemTexto = `${quantidade} un. - ${itemTexto}`;
+                            }
+                        }
+                        
+                        // Lógica "Outros": Se item detectado mas categoriaAtual está vazia, atribui "Outros"
+                        if (itemTexto) {
+                            const categoriaParaUsar = categoriaAtual || 'Outros';
+                            itens.push({ categoria: categoriaParaUsar, item: itemTexto, quantidade: quantidade });
+                        }
                     }
                 }
             });
-            
             return itens;
         }
 
-        // Gera lista de pedidos (formato detalhado)
         function gerarListaPedidos() {
             const selecionados = todosPedidos.filter(p => ticketsSelecionados.has(p.ID_do_Pedido));
             if(selecionados.length === 0) return;
@@ -1914,26 +2120,24 @@
                 texto += `   ⤷ ${p.ID_do_Pedido}${emoji ? ' ' + emoji : ''}\n\n`;
                 
                 texto += `*- Itens:*\n\n`;
-                
                 const itens = processarItensResumo(p.Resumo_dos_Itens);
                 let categoriaAtual = '';
                 
+                // Agrupa itens por categoria para exibição organizada
                 itens.forEach(item => {
                     if (item.categoria !== categoriaAtual) {
                         categoriaAtual = item.categoria;
                         texto += `*- ${categoriaAtual}*\n`;
                     }
-                    // Remove "⤷" se existir e formata como "1 un. - [item]"
                     let itemFormatado = item.item.replace(/^⤷\s*/, '').trim();
                     texto += `${itemFormatado}\n`;
                 });
                 
-                // Se não conseguiu processar itens, mostra o resumo original
+                // Se não houver itens processados mas houver resumo, exibe o resumo original
                 if (itens.length === 0 && p.Resumo_dos_Itens) {
                     texto += p.Resumo_dos_Itens + '\n';
                 }
                 
-                // Adiciona informações de valor (com cupom se houver)
                 const valores = calcularValoresComCupom(p);
                 if (valores.temCupom && valores.desconto > 0) {
                     texto += `\n*Valor Original:* R$ ${valores.valorOriginal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n`;
@@ -1942,133 +2146,168 @@
                 } else {
                     texto += `\n*Total:* R$ ${formatarValorComCentavos(p.Total_Final)}\n`;
                 }
-                
                 texto += `\n------------------------------------------\n\n`;
             });
             
-            // Copia para área de transferência e abre WhatsApp
             navigator.clipboard.writeText(texto).then(() => {
                 showToast("Resumo copiado! Abrindo WhatsApp...");
-                const link = `https://wa.me/558199591775?text=${encodeURIComponent(texto)}`;
+                const link = `https://wa.me/558195256641?text=${encodeURIComponent(texto)}`;
                 window.open(link, '_blank');
             }).catch(() => {
-                // Fallback: abre WhatsApp direto
-                const link = `https://wa.me/558199591775?text=${encodeURIComponent(texto)}`;
+                const link = `https://wa.me/558195256641?text=${encodeURIComponent(texto)}`;
                 window.open(link, '_blank');
             });
-            
             fecharModalResumos();
         }
 
-        // Gera resumo de itens agrupados
         function gerarResumoItens() {
             const selecionados = todosPedidos.filter(p => ticketsSelecionados.has(p.ID_do_Pedido));
             if(selecionados.length === 0) return;
             
-            let texto = `Resumo ${selecionados.length} Pedido(s):\n\n`;
-            
-            // Lista de clientes
-            texto += `- Clientes:\n\n`;
-            selecionados.forEach(p => {
-                const emoji = obterEmojiCupom(p);
-                texto += `* ${p.Nome_Cliente}\n`;
-                texto += `   ⤷ ${p.Data_Entrega || '--/--/----'} às ${p.Horario_Entrega || '--:--'}\n`;
-                texto += `   ⤷ ${p.ID_do_Pedido}${emoji ? ' ' + emoji : ''}\n\n`;
-            });
-            
-            // Agrupa itens por categoria
             const itensAgrupados = {};
-            let totalGeral = 0;
+            const datasEntrega = [];
             
+            // Percorre todos os pedidos selecionados e processa seus itens
             selecionados.forEach(p => {
-                const itens = processarItensResumo(p.Resumo_dos_Itens);
+                // Coleta datas de entrega para calcular o intervalo
+                if (p.Data_Entrega) {
+                    const dataPed = parseDataBR(p.Data_Entrega);
+                    if (dataPed) {
+                        datasEntrega.push(dataPed);
+                    }
+                }
                 
+                const itens = processarItensResumo(p.Resumo_dos_Itens);
                 itens.forEach(item => {
+                    // Inicializa a categoria se não existir
                     if (!itensAgrupados[item.categoria]) {
                         itensAgrupados[item.categoria] = {};
                     }
                     
                     // Extrai quantidade e nome do item
+                    // Padrão esperado: "X un. - Nome do Produto"
+                    // Usa a propriedade quantidade retornada por processarItensResumo, ou extrai do texto
+                    let quantidade = item.quantidade || 1;
+                    let nomeItem = '';
+                    
                     const match = item.item.match(/^(\d+)\s*un\.\s*-\s*(.+)$/);
                     if (match) {
-                        const quantidade = parseInt(match[1]);
-                        const nomeItem = match[2].trim();
-                        
-                        if (!itensAgrupados[item.categoria][nomeItem]) {
-                            itensAgrupados[item.categoria][nomeItem] = 0;
-                        }
-                        itensAgrupados[item.categoria][nomeItem] += quantidade;
+                        // Se já tem quantidade no objeto, usa ela; senão, extrai do texto
+                        quantidade = item.quantidade || parseInt(match[1], 10) || 1;
+                        nomeItem = match[2].trim();
                     } else {
-                        // Se não tem formato padrão, adiciona como está
-                        if (!itensAgrupados[item.categoria][item.item]) {
-                            itensAgrupados[item.categoria][item.item] = 0;
+                        // Se não tem o padrão, tenta extrair o nome removendo a quantidade do início
+                        nomeItem = item.item.replace(/^\d+\s*un\.\s*-\s*/, '').trim();
+                        if (!nomeItem) {
+                            nomeItem = item.item.trim();
                         }
-                        itensAgrupados[item.categoria][item.item] += 1;
                     }
+                    
+                    // Limpa o nome do item: remove "- (" e informações de valor unitário
+                    // Remove padrões como "- (R$: 3,00 cada) =", "- (", etc.
+                    nomeItem = nomeItem
+                        .replace(/\s*-\s*\([^)]*\)\s*=?\s*/g, '') // Remove "- (qualquer coisa) =" em qualquer lugar
+                        .replace(/\s*-\s*\([^)]*$/g, '') // Remove "- (" e tudo depois até o final (caso não tenha fechamento)
+                        .replace(/\s*-\s*\(/g, '') // Remove qualquer "- (" restante
+                        .trim();
+                    
+                    // Inicializa o item na categoria se não existir
+                    if (!itensAgrupados[item.categoria][nomeItem]) {
+                        itensAgrupados[item.categoria][nomeItem] = 0;
+                    }
+                    
+                    // Soma a quantidade do item idêntico (mesmo nome e categoria)
+                    itensAgrupados[item.categoria][nomeItem] += quantidade;
                 });
-                
-                totalGeral += calcularValorPedido(p);
             });
             
-            // Monta texto dos itens agrupados
-            texto += `*- Itens:*\n\n`;
+            // Calcula o intervalo de datas (mínima e máxima)
+            let dataInicioStr = '--/--/----';
+            let dataFimStr = '--/--/----';
             
-            Object.keys(itensAgrupados).sort().forEach(categoria => {
-                texto += `*- ${categoria}*\n`;
+            if (datasEntrega.length > 0) {
+                datasEntrega.sort((a, b) => a.getTime() - b.getTime());
+                const dataInicio = datasEntrega[0];
+                const dataFim = datasEntrega[datasEntrega.length - 1];
                 
+                // Formata data no formato DD/MM/AAAA
+                const formatarDataBR = (data) => {
+                    const dia = String(data.getDate()).padStart(2, '0');
+                    const mes = String(data.getMonth() + 1).padStart(2, '0');
+                    const ano = data.getFullYear();
+                    return `${dia}/${mes}/${ano}`;
+                };
+                
+                dataInicioStr = formatarDataBR(dataInicio);
+                dataFimStr = formatarDataBR(dataFim);
+            }
+            
+            // Gera o texto final - apenas lista de itens
+            // Se data início e fim são iguais, mostra apenas uma data; senão, mostra intervalo
+            const intervaloDatas = dataInicioStr === dataFimStr ? dataInicioStr : `${dataInicioStr} à ${dataFimStr}`;
+            let texto = `*- Lista de itens | ${intervaloDatas}*\n\n`;
+            
+            // Separa categorias normais de "Outros" para colocar "Outros" no final
+            const categorias = Object.keys(itensAgrupados);
+            const categoriasNormais = categorias.filter(cat => cat.toLowerCase() !== 'outros' && cat.toLowerCase() !== 'outros itens');
+            const categoriasOutros = categorias.filter(cat => cat.toLowerCase() === 'outros' || cat.toLowerCase() === 'outros itens');
+            
+            // Ordena categorias normais alfabeticamente
+            categoriasNormais.sort();
+            
+            // Adiciona categorias normais primeiro
+            categoriasNormais.forEach(categoria => {
+                texto += `*- ${categoria}*\n`;
                 const itensCategoria = itensAgrupados[categoria];
                 Object.keys(itensCategoria).sort().forEach(nomeItem => {
-                    const quantidade = itensCategoria[nomeItem];
+                    const quantidade = itensAgrupados[categoria][nomeItem];
                     texto += `${quantidade} un. - ${nomeItem}\n`;
                 });
                 texto += `\n`;
             });
             
-            // Formata total
-            const totalFormatado = totalGeral.toLocaleString('pt-BR', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
+            // Adiciona "Outros" no final (se houver)
+            categoriasOutros.forEach(categoria => {
+                // Normaliza o nome para "Outros itens"
+                const nomeCategoria = categoria.toLowerCase() === 'outros' ? 'Outros itens' : categoria;
+                texto += `*- ${nomeCategoria}*\n`;
+                const itensCategoria = itensAgrupados[categoria];
+                Object.keys(itensCategoria).sort().forEach(nomeItem => {
+                    const quantidade = itensAgrupados[categoria][nomeItem];
+                    texto += `${quantidade} un. - ${nomeItem}\n`;
+                });
+                texto += `\n`;
             });
-            texto += `Total Geral: R$ ${totalFormatado}`;
             
-            // Copia para área de transferência e abre WhatsApp
             navigator.clipboard.writeText(texto).then(() => {
                 showToast("Resumo copiado! Abrindo WhatsApp...");
-            const link = `https://wa.me/558199591775?text=${encodeURIComponent(texto)}`;
+            const link = `https://wa.me/558195256641?text=${encodeURIComponent(texto)}`;
             window.open(link, '_blank');
             }).catch(() => {
-                // Fallback: abre WhatsApp direto
-                const link = `https://wa.me/558199591775?text=${encodeURIComponent(texto)}`;
+                const link = `https://wa.me/558195256641?text=${encodeURIComponent(texto)}`;
                 window.open(link, '_blank');
             });
-            
             fecharModalResumos();
         }
 
-        // Variável para armazenar o ID do pedido atual no modal WhatsApp
         let pedidoWhatsAppAtual = null;
-        let modoWhatsAppAtual = 'resumo'; // 'resumo' ou 'contato'
+        let modoWhatsAppAtual = 'resumo';
 
-        // Função para extrair o primeiro nome
         function obterPrimeiroNome(nomeCompleto) {
             if (!nomeCompleto) return 'Cliente';
             const partes = nomeCompleto.trim().split(' ');
             return partes[0];
         }
 
-        // Função para formatar número de telefone (remove caracteres não numéricos)
         function formatarNumeroTelefone(numero) {
             if (!numero) return '';
-            // Remove tudo exceto números
             let numeroLimpo = numero.replace(/\D/g, '');
-            // Se começar com 0, remove
             if (numeroLimpo.startsWith('0')) {
                 numeroLimpo = numeroLimpo.substring(1);
             }
             return numeroLimpo;
         }
 
-        // Abre modal de confirmação do WhatsApp
         function abrirModalWhatsApp(idPedido) {
             const pedido = todosPedidos.find(p => p.ID_do_Pedido === idPedido);
             if (!pedido) return;
@@ -2080,7 +2319,6 @@
             const message = document.getElementById('whatsapp-confirm-message');
             const btn = document.getElementById('whatsapp-confirm-btn');
 
-            // Cria botões para as três opções
             message.innerHTML = `
                 <div style="display: flex; flex-direction: column; gap: 10px; margin: 20px 0;">
                     <button class="btn-save" onclick="selecionarModoWhatsApp('resumo')" style="width: 100%; padding: 12px;">
@@ -2100,7 +2338,6 @@
             modal.style.display = 'flex';
         }
 
-        // Seleciona o modo do WhatsApp
         function selecionarModoWhatsApp(modo) {
             modoWhatsAppAtual = modo;
             const pedido = todosPedidos.find(p => p.ID_do_Pedido === pedidoWhatsAppAtual);
@@ -2123,7 +2360,6 @@
             btn.style.display = 'block';
         }
 
-        // Confirma e envia WhatsApp
         async function confirmarEnvioWhatsApp() {
             if (!pedidoWhatsAppAtual) return;
 
@@ -2141,7 +2377,6 @@
             const primeiroNome = obterPrimeiroNome(pedido.Nome_Cliente);
 
             if (modoWhatsAppAtual === 'resumo') {
-                // Envia resumo completo do pedido no formato solicitado
                 texto = `*Olá ${primeiroNome}!*\n\n`;
                 texto += `*Resumo do Pedido ${pedido.ID_do_Pedido}*\n\n`;
                 texto += `*Data de Entrega:* ${pedido.Data_Entrega || '--/--/----'}\n`;
@@ -2151,43 +2386,25 @@
                     texto += `*Itens do Pedido:*\n${pedido.Resumo_dos_Itens}\n\n`;
                 }
                 
-                // Remove R$ e formata o total (apenas números)
                 let totalFormatado = (pedido.Total_Final || '0').toString();
-                // Remove R$, pontos, vírgulas e espaços, mantém apenas números
                 totalFormatado = totalFormatado.replace(/R\$/gi, '').replace(/\./g, '').replace(/,/g, '').replace(/\s/g, '').trim();
-                // Se não tiver valor, usa 0
-                if (!totalFormatado || totalFormatado === '') {
-                    totalFormatado = '0';
-                }
+                if (!totalFormatado || totalFormatado === '') totalFormatado = '0';
                 
                 texto += `*Total:* ${totalFormatado}\n`;
                 texto += `*Forma de Pagamento:* ${pedido.Forma_de_Pagamento || 'Não informado'}`;
             } else if (modoWhatsAppAtual === 'pedido-pronto') {
-                // Move pedido para "Aguardando Retirada" e envia mensagem
                 mostrarLoading(true);
-                
-                // Atualiza o status do pedido
                 pedido.Status_do_Pedido = 'Aguardando Retirada';
-                
-                // Atualiza na planilha
                 try {
                     await fetch(API_URL, {
                         method: "POST", 
                         mode: 'no-cors', 
                         headers: { "Content-Type": "text/plain" },
-                        body: JSON.stringify({ 
-                            action: 'updateStatus', 
-                            id: pedidoWhatsAppAtual, 
-                            Status_do_Pedido: 'Aguardando Retirada' 
-                        })
+                        body: JSON.stringify({ action: 'updateStatus', id: pedidoWhatsAppAtual, Status_do_Pedido: 'Aguardando Retirada' })
                     });
-                } catch (error) {
-                    console.error('Erro ao atualizar status:', error);
-                }
-                
+                } catch (error) { console.error('Erro:', error); }
                 mostrarLoading(false);
                 
-                // Prepara mensagem de pedido pronto
                 texto = `*Olá ${primeiroNome}!*\n\n`;
                 texto += `✅ Seu pedido *${pedido.ID_do_Pedido}* está pronto para retirada!\n\n`;
                 texto += `Por favor, venha buscar no horário agendado:\n`;
@@ -2195,7 +2412,6 @@
                 texto += `⏰ ${pedido.Horario_Entrega || '--:--'}\n\n`;
                 texto += `Aguardamos você! 😊`;
             } else {
-                // Apenas abre conversa
                 texto = `Olá ${primeiroNome}!`;
             }
 
@@ -2204,14 +2420,13 @@
             fecharModalWhatsApp();
             
             if (modoWhatsAppAtual === 'pedido-pronto') {
-                filtrarPedidos(); // Atualiza a lista para refletir a mudança de status
+                filtrarPedidos(); 
                 showToast("Pedido marcado como pronto e notificação enviada!");
             } else {
                 showToast(modoWhatsAppAtual === 'resumo' ? "Resumo enviado!" : "WhatsApp aberto!");
             }
         }
 
-        // Fecha modal do WhatsApp
         function fecharModalWhatsApp() {
             document.getElementById('whatsapp-confirm-modal').style.display = 'none';
             pedidoWhatsAppAtual = null;
@@ -2243,7 +2458,6 @@
             t.style.display = 'block';
             setTimeout(() => { t.style.display = 'none'; }, 3000);
         }
-        function limparString(str) { return str.replace(/[^a-zA-Z0-9]/g, ''); }
         window.onclick = function(event) {
             const modal = document.getElementById('edit-modal');
             if (event.target == modal) fecharModal();
@@ -2257,5 +2471,4 @@
 
     </script>
 </body>
-</html>
 </html>

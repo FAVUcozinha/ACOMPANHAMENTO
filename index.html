@@ -67,7 +67,7 @@
         }
         #dashboard-totals strong { display: block; font-size: 1.4em; color: var(--cor-laranja-forte); }
         #dashboard-totals span { font-size: 0.9em; color: #555; }
-        
+
         /* Tag de Pagamento no Card */
         .payment-type-tag {
             display: inline-block;
@@ -561,18 +561,40 @@
                 min-height: auto;
             }
             
-            /* Colunas colapsadas por padrão no mobile */
-            .kanban-column .column-content {
-                display: none;
-                max-height: 0;
+            header { flex-direction: column; gap: 10px; text-align: center; }
+            
+            /* Filtros ocultos por padrão no mobile */
+            #filter-toggle-btn {
+                display: block !important;
+            }
+            
+            .filter-bar { 
+                flex-direction: column; 
+                align-items: stretch;
+                display: none; /* Oculto por padrão */
+            }
+            
+            .filter-bar.show {
+                display: flex; /* Mostra quando tem classe 'show' */
+            }
+            
+            .filter-group-main, .filter-group-additional { 
+                flex-direction: column; 
+                margin-left: 0; 
+                gap: 15px; 
+            }
+            
+            /* Colunas fechadas por padrão no mobile */
+            .kanban-column:not(.expanded) .column-content {
+                display: none !important;
+                max-height: 0 !important;
                 overflow: hidden;
-                transition: max-height 0.3s ease-out;
             }
             
             .kanban-column.expanded .column-content {
-                display: block;
-                max-height: 5000px;
-                transition: max-height 0.3s ease-in;
+                display: block !important;
+                max-height: none !important;
+                overflow-y: auto;
             }
             
             /* Header clicável no mobile */
@@ -585,13 +607,72 @@
                 display: inline-block;
             }
             
-            header { flex-direction: column; gap: 10px; text-align: center; }
-            .filter-bar { flex-direction: column; align-items: stretch; }
-            .filter-group-main, .filter-group-additional { 
-                flex-direction: column; 
-                margin-left: 0; 
-                gap: 15px; 
+            /* Ajustes do modal de adicionar itens no mobile */
+            #adicionar-itens-modal .modal-content {
+                max-width: 95vw !important;
+                max-height: 95vh !important;
+                padding: 15px !important;
             }
+            
+            /* Campos "Outros" em coluna no mobile */
+            .outros-fields-row {
+                flex-direction: column !important;
+            }
+            
+            .outros-field-item,
+            .outros-field-valor,
+            .outros-field-qtd {
+                flex: 1 1 100% !important;
+                width: 100% !important;
+                margin-bottom: 10px;
+            }
+            
+            /* Itens disponíveis - ajustes para mobile */
+            #itens-disponiveis-container {
+                overflow-x: hidden;
+            }
+            
+            #itens-lista > div {
+                min-width: 100% !important;
+            }
+            
+            /* Linhas de itens disponíveis em coluna no mobile */
+            .item-disponivel-row {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 10px !important;
+            }
+            
+            .item-nome {
+                width: 100% !important;
+                flex: none !important;
+            }
+            
+            .item-valor-input,
+            .item-qtd-input {
+                width: 100% !important;
+                flex: none !important;
+            }
+            
+            .item-add-btn {
+                width: 100% !important;
+            }
+            
+            /* Fieldset de adicionar item - responsivo no mobile */
+            fieldset > div[style*="display: flex"] {
+                flex-direction: column !important;
+            }
+            
+            fieldset > div > div {
+                flex: 1 1 100% !important;
+                width: 100% !important;
+                margin-bottom: 10px;
+            }
+            
+            fieldset button {
+                width: 100% !important;
+            }
+            
             #bulk-actions-bar { width: 90%; flex-wrap: wrap; justify-content: center; bottom: 10px; border-radius: 15px;}
         }
     </style>
@@ -611,17 +692,20 @@
         </div>
     </header>
 
-    <div class="filter-bar">
+    <div id="filter-toggle-btn" style="display: none; padding: 10px; background: var(--cor-fundo-creme); border-bottom: 2px solid var(--cor-laranja-forte); text-align: center; cursor: pointer; user-select: none;">
+        <span style="font-weight: bold; color: var(--cor-texto);">Filtros</span>
+    </div>
+    <div class="filter-bar" id="filter-bar">
         <div class="filter-group-main">
-            <div class="search-filter">
-                <label>Buscar</label>
-                <input type="text" id="search-input" placeholder="ID do pedido, nome ou número do cliente" oninput="filtrarPedidos()">
-            </div>
-            <div class="date-filter">
-                <label>Data de Entrega</label>
+        <div class="search-filter">
+            <label>Buscar</label>
+            <input type="text" id="search-input" placeholder="ID do pedido, nome ou número do cliente" oninput="filtrarPedidos()">
+        </div>
+        <div class="date-filter">
+            <label>Data de Entrega</label>
                 <input type="hidden" id="date-input" onchange="filtrarPedidos()">
-                <input type="hidden" id="date-filter-inicial" value="">
-                <input type="text" id="date-filter-display" readonly placeholder="Filtrar por Data" onclick="openDatePicker()" style="background:white; cursor:pointer;">
+            <input type="hidden" id="date-filter-inicial" value="">
+            <input type="text" id="date-filter-display" readonly placeholder="Filtrar por Data" onclick="openDatePicker()" style="background:white; cursor:pointer;">
             </div>
         </div>
         <div class="filter-group-additional">
@@ -723,6 +807,35 @@
                 <label>Observações:</label>
                 <textarea id="edit-obs" rows="3"></textarea>
                 
+                <!-- Seção Adicionar Item ao Pedido -->
+                <fieldset style="border: 2px solid var(--cor-laranja-forte); border-radius: 8px; padding: 15px; margin: 15px 0;">
+                    <legend style="font-weight: bold; color: var(--cor-laranja-forte); padding: 0 10px;">Adicionar Item ao Pedido</legend>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;">
+                        <div style="flex: 2; min-width: 200px;">
+                            <label style="font-size:0.9em;">Produto:</label>
+                            <select id="add-produto-select" style="width:100%; padding:8px; border:1px solid #5a9bd4; border-radius:8px;" onchange="toggleCamposOutros()">
+                                <option value="">Selecione um produto...</option>
+                                <option value="__OUTROS__">--- Outros ---</option>
+                            </select>
+                        </div>
+                        <div id="add-nome-outros-container" style="flex: 2; min-width: 200px; display: none;">
+                            <label style="font-size:0.9em;">Nome do Item:</label>
+                            <input type="text" id="add-nome-outros" placeholder="Nome do item" style="width:100%; padding:8px; border:1px solid #5a9bd4; border-radius:8px;">
+                        </div>
+                        <div style="flex: 1; min-width: 100px;">
+                            <label style="font-size:0.9em;">Quantidade:</label>
+                            <input type="number" id="add-qtd" value="1" min="1" style="width:100%; padding:8px; border:1px solid #5a9bd4; border-radius:8px;">
+                        </div>
+                        <div style="flex: 1; min-width: 120px;">
+                            <label style="font-size:0.9em;">Preço (R$):</label>
+                            <input type="text" id="add-preco" placeholder="0,00" style="width:100%; padding:8px; border:1px solid #5a9bd4; border-radius:8px;">
+                        </div>
+                        <div style="flex: 0 0 auto;">
+                            <button type="button" class="btn-save" onclick="adicionarItemAoResumo()" style="padding: 8px 16px; white-space: nowrap;">Adicionar à Lista</button>
+                        </div>
+                    </div>
+                </fieldset>
+                
                 <label>Itens do Pedido:</label>
                 <textarea id="edit-resumo" rows="4" style="font-size:0.85em;"></textarea>
 
@@ -812,11 +925,342 @@
         </div>
     </div>
 
+    <div id="adicionar-itens-modal" class="modal">
+        <div class="modal-content" style="max-width:600px; max-height:90vh; overflow-y:auto;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <h2 style="margin-top:0; color:var(--cor-laranja-forte);">Adicionar Itens</h2>
+                <span class="close-button" onclick="fecharModalAdicionarItens()">&times;</span>
+            </div>
+            
+            <!-- Campo "Outros" no topo -->
+            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 20px;" class="outros-container">
+                <h3 style="margin-top:0; font-size:1em; color:var(--cor-texto);">Outros</h3>
+                <div class="outros-fields-row" style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <div class="outros-field-item" style="flex: 2;">
+                        <label style="font-size:0.9em;">Item:</label>
+                        <input type="text" id="outros-item-nome" placeholder="Nome do item" style="width:100%; padding:8px; border:1px solid #5a9bd4; border-radius:8px;">
+                    </div>
+                    <div class="outros-field-valor" style="flex: 1;">
+                        <label style="font-size:0.9em;">Valor (R$):</label>
+                        <input type="number" id="outros-item-valor" placeholder="0.00" step="0.01" min="0" style="width:100%; padding:8px; border:1px solid #5a9bd4; border-radius:8px;">
+                    </div>
+                    <div class="outros-field-qtd" style="flex: 1;">
+                        <label style="font-size:0.9em;">Quantidade:</label>
+                        <input type="number" id="outros-item-quantidade" placeholder="1" min="1" value="1" style="width:100%; padding:8px; border:1px solid #5a9bd4; border-radius:8px;">
+                    </div>
+                </div>
+                <button type="button" class="btn-save" onclick="adicionarItemOutros()" style="width:100%; padding:8px; font-size:0.9em;">Adicionar Item</button>
+            </div>
+
+            <!-- Lista de itens disponíveis -->
+            <div id="itens-disponiveis-container">
+                <h3 style="margin-top:0; font-size:1em; color:var(--cor-texto);">Itens Disponíveis</h3>
+                <div id="itens-lista" style="display:flex; flex-direction:column; gap:15px;">
+                    <!-- Itens serão inseridos aqui via JavaScript -->
+                </div>
+            </div>
+
+            <!-- Resumo dos itens selecionados -->
+            <div id="itens-selecionados-resumo" style="margin-top:20px; padding:15px; background:#e8f5e9; border-radius:8px; display:none;">
+                <h3 style="margin-top:0; font-size:1em; color:var(--cor-texto);">Itens a Adicionar:</h3>
+                <div id="itens-selecionados-lista" style="margin:10px 0;"></div>
+                <div style="font-weight:bold; margin-top:10px; padding-top:10px; border-top:1px solid #ccc;">
+                    <span>Total: R$ </span><span id="total-itens-selecionados">0,00</span>
+                </div>
+            </div>
+
+            <div class="modal-actions" style="justify-content: center; margin-top:20px;">
+                <button type="button" class="btn-cancel" onclick="fecharModalAdicionarItens()">Cancelar</button>
+                <button type="button" class="btn-save" onclick="confirmarAdicionarItens()">Confirmar e Adicionar</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ============================================================================
         // CONFIGURAÇÃO
         // ============================================================================
         const API_URL = "https://script.google.com/macros/s/AKfycbxCz6Fj_3vIp0DHUsf9m7zYi3fjGx_zNqsXY4-nvXJwuZbkV7Pw1PTBDTngrV-AP9Y0/exec";
+
+        // ============================================================================
+        // CATÁLOGO DE PRODUTOS
+        // ============================================================================
+        // ============================================================================
+        // CATÁLOGO DE PREÇOS
+        // ============================================================================
+        const CATALOGO_PRECOS = {
+            // --- BOLOS TRADICIONAIS ---
+            'Bolo de Bem-Casado - P (1.5 KG)': 100.00,
+            'Bolo de Bem-Casado - M (2.5 KG)': 160.00,
+            'Bolo de Bem-Casado - G (3.5 KG)': 220.00,
+            'Bolo de Doce de Leite - P (1.5 KG)': 90.00,
+            'Bolo de Doce de Leite - M (2.5 KG)': 150.00,
+            'Bolo de Doce de Leite - G (3.5 KG)': 210.00,
+            'Bolo de Chocolate - P (1.5 KG)': 90.00,
+            'Bolo de Chocolate - M (2.5 KG)': 150.00,
+            'Bolo de Chocolate - G (3.5 KG)': 210.00,
+            'Bolo de Limão - P (1.5 KG)': 90.00,
+            'Bolo de Limão - M (2.5 KG)': 150.00,
+            'Bolo de Limão - G (3.5 KG)': 210.00,
+            'Bolo de Maracujá - P (1.5 KG)': 90.00,
+            'Bolo de Maracujá - M (2.5 KG)': 150.00,
+            'Bolo de Maracujá - G (3.5 KG)': 210.00,
+
+            // --- BOLOS ESPECIAIS ---
+            '🎄Cheesecake tradicional - 2.1 KG': 150.00,
+            '🎄Cheesecake Doce de leite - 2.1 KG': 155.00,
+            'Bolo de Ameixa - P (1.5 KG)': 110.00,
+            'Bolo de Ameixa - M (2.5 KG)': 180.00,
+            'Bolo de Ameixa - G (3.5 KG)': 250.00,
+            'Bolo de Café e Doce de Leite - P (1.5 KG)': 110.00,
+            'Bolo de Café e Doce de Leite - M (2.5 KG)': 180.00,
+            'Bolo de Café e Doce de Leite - G (3.5 KG)': 250.00,
+            'Bolo de Chocolate 50% - P (1.5 KG)': 110.00,
+            'Bolo de Chocolate 50% - M (2.5 KG)': 175.00,
+            'Bolo de Chocolate 50% - G (3.5 KG)': 245.00,
+            'Bolo de Delicia de Abacaxi - P (1.5 KG)': 105.00,
+            'Bolo de Delicia de Abacaxi - M (2.5 KG)': 175.00,
+            'Bolo de Delicia de Abacaxi - G (3.5 KG)': 245.00,
+            'Bolo de Morango - P (1.5 KG)': 110.00,
+            'Bolo de Morango - M (2.5 KG)': 175.00,
+            'Bolo de Morango - G (3.5 KG)': 245.00,
+            'Bolo de Ninho trufado - P (1.5 KG)': 110.00,
+            'Bolo de Ninho trufado - M (2.5 KG)': 175.00,
+            'Bolo de Ninho trufado - G (3.5 KG)': 245.00,
+            '🎄Bolo de Noiva - P (1.5 KG)': 145.00,
+            '🎄Bolo de Noiva - M (2.5 KG)': 240.00,
+            '🎄Bolo de Noiva - G (3.5 KG)': 335.00,
+            'Bolo Prestígio - P (1.5 KG)': 105.00,
+            'Bolo Prestígio - M (2.5 KG)': 175.00,
+            'Bolo Prestígio - G (3.5 KG)': 245.00,
+            'Bolo Red velvet - P (1.5 KG)': 105.00,
+            'Bolo Red velvet - M (2.5 KG)': 175.00,
+            'Bolo Red velvet - G (3.5 KG)': 245.00,
+
+            // --- DOCES ---
+            'Beijinho': 1.20,
+            'Bem-casado': 1.20,
+            'Brigadeiro': 1.20,
+            'Mini Cookie Black': 2.80,
+            'Mini Cookie Red Velvet': 2.80,
+            'Mini Cookie Tradicional': 2.80,
+            'Mini Tortilete': 1.30,
+            'Moranguinho': 1.20,
+            'Ouriço': 1.30,
+            'Queijadinha': 1.30,
+            'Surpresa de uva': 1.30,
+
+            // --- COOKIES ---
+            'Cookie Tradicional *': 12.00,
+            'Cookie Red Velvet *': 12.00,
+            'Cookie Black *': 12.00,
+
+            // --- SALGADOS FRITOS ---
+            'Bolinho de Bacalhau': 1.30,
+            'Bolinho de Charque': 1.20,
+            'Coxinha de Frango': 1.00,
+            'Croquete Misto': 1.00,
+            'Camarão Empanado': 1.50,
+            'Mini Quibe': 1.10,
+            'Pastel de Festa': 1.30,
+
+            // --- SALGADOS FORNO ---
+            'Canudinho de Frango': 1.50,
+            'Empadinha de Bacalhau': 1.30,
+            'Empadinha de Camarão': 1.30,
+            'Empadinha de Carne': 1.00,
+            'Empadinha de Frango': 1.00,
+            'Mini Folhado de Carne': 2.20,
+            'Mini Folhado de Frango': 2.20,
+            'Mini Folhado de Queijo': 2.20,
+            'Mini Folhado de Pizza': 2.20,
+            'Mini Enroladinho': 1.00,
+            'Pastel de Forno de Bacalhau': 1.30,
+            'Pastel de Forno de Camarão': 1.40,
+            'Pastel de Forno de Carne': 1.00,
+            'Pastel de Forno de Frango': 1.00,
+            'Pastel de Forno de Queijo': 1.00,
+            'Pastel de Forno de Pizza': 1.00,
+
+            // --- SALGADOS VEGETARIANOS ---
+            'Canudinho de Soja': 1.50,
+            'Coxinha de Soja': 1.00,
+            'Coxinha de Caju *': 1.20,
+            'Empadinha de Creme de Aborbinha': 1.00,
+            'Empadinha de Falso Camarão': 1.00,
+            'Pastel de Festa Vegetariano': 1.30,
+            'Pastel de Forno Creme de Abobrinha': 1.00,
+            'Pastel de Forno Caju *': 1.30,
+
+            // --- PRATOS SALGADOS ---
+            'Empadão de Bacalhau - P (1 KG)': 120.00,
+            'Empadão de Bacalhau - M (2 KG)': 220.00,
+            'Empadão de Bacalhau - G (3 KG)': 340.00,
+            'Empadão de Carne - P (1 KG)': 70.00,
+            'Empadão de Carne - M (2 KG)': 140.00,
+            'Empadão de Carne - G (3 KG)': 210.00,
+            'Empadão de Camarão - P (1 KG)': 120.00,
+            'Empadão de Camarão - M (2 KG)': 220.00,
+            'Empadão de Camarão - G (3 KG)': 340.00,
+            'Empadão de Frango - P (1 KG)': 70.00,
+            'Empadão de Frango - M (2 KG)': 140.00,
+            'Empadão de Frango - G (3 KG)': 210.00,
+            'Fricassê de Frango - P (1 KG)': 80.00,
+            'Fricassê de Frango - M (2 KG)': 160.00,
+            'Fricassê de Frango - G (3 KG)': 240.00,
+            'Quiche de Camarão - P (1 KG)': 120.00,
+            'Quiche de Camarão - M (2 KG)': 240.00,
+            'Quiche de Camarão - G (3 KG)': 360.00,
+            'Quiche de Frango - P (1 KG)': 90.00,
+            'Quiche de Frango - M (2 KG)': 180.00,
+            'Quiche de Frango - G (3 KG)': 260.00,
+            'Rocambole de Bacalhau - P (1 KG)': 120.00,
+            'Rocambole de Bacalhau - M (2 KG)': 240.00,
+            'Rocambole de Bacalhau - G (3 KG)': 360.00,
+            'Rocambole de Camarão - P (1 KG)': 120.00,
+            'Rocambole de Camarão - M (2 KG)': 240.00,
+            'Rocambole de Camarão - G (3 KG)': 365.00,
+            'Rocambole de Carne - P (1 KG)': 70.00,
+            'Rocambole de Carne - M (2 KG)': 140.00,
+            'Rocambole de Carne - G (3 KG)': 210.00,
+            'Rocambole de Frango - P (1 KG)': 70.00,
+            'Rocambole de Frango - M (2 KG)': 140.00,
+            'Rocambole de Frango - G (3 KG)': 210.00,
+            '🎄Salpicão de Frango - P (1 KG)': 80.00,
+            '🎄Salpicão de Frango - M (2 KG)': 160.00,
+            '🎄Salpicão de Frango - G (3 KG)': 240.00,
+            'Torta Salgada de Bacalhau - P (1 KG)': 120.00,
+            'Torta Salgada de Bacalhau - M (2 KG)': 240.00,
+            'Torta Salgada de Bacalhau - G (3 KG)': 360.00,
+            'Torta Salgada de Carne - P (1 KG)': 70.00,
+            'Torta Salgada de Carne - M (2 KG)': 140.00,
+            'Torta Salgada de Carne - G (3 KG)': 210.00,
+            'Torta Salgada de Camarão - P (1 KG)': 120.00,
+            'Torta Salgada de Camarão - M (2 KG)': 240.00,
+            'Torta Salgada de Camarão - G (3 KG)': 360.00,
+            'Torta Salgada de Frango - P (1 KG)': 70.00,
+            'Torta Salgada de Frango - M (2 KG)': 140.00,
+            'Torta Salgada de Frango - G (3 KG)': 210.00
+        };
+
+        const CATALOGO_PRODUTOS = {
+            'Bolos Tradicionais': [
+                'Bolo de Bem-Casado',
+                'Bolo de Doce de Leite',
+                'Bolo de Chocolate',
+                'Bolo de Limão',
+                'Bolo de Maracujá'
+            ],
+            'Bolos Especiais': [
+                'Cheesecake tradicional',
+                'Cheesecake Doce de leite',
+                'Bolo de Ameixa',
+                'Bolo de Café e Doce de Leite',
+                'Bolo de Chocolate 50%',
+                'Bolo de Delicia de Abacaxi',
+                'Bolo de Morango',
+                'Bolo de Ninho trufado',
+                'Bolo de Noiva',
+                'Bolo Prestígio',
+                'Bolo Red velvet'
+            ],
+            'Doces': [
+                'Beijinho',
+                'Bem-casado',
+                'Brigadeiro',
+                'Mini Cookie Black',
+                'Mini Cookie Red Velvet',
+                'Mini Cookie Tradicional',
+                'Mini Tortilete',
+                'Moranguinho',
+                'Ouriço',
+                'Queijadinha',
+                'Surpresa de uva'
+            ],
+            'Cookies': [
+                'Cookie Tradicional',
+                'Cookie Red Velvet',
+                'Cookie Black'
+            ],
+            'Salgados Fritos': [
+                'Bolinho de Bacalhau',
+                'Bolinho de Charque',
+                'Coxinha de Frango',
+                'Croquete Misto',
+                'Camarão Empanado',
+                'Mini Quibe',
+                'Pastel de Festa'
+            ],
+            'Salgados Assados': [
+                'Canudinho de Frango',
+                'Empadinha de Bacalhau',
+                'Empadinha de Camarão',
+                'Empadinha de Carne',
+                'Empadinha de Frango',
+                'Mini Folhado de Carne',
+                'Mini Folhado de Frango',
+                'Mini Folhado de Queijo',
+                'Mini Folhado de Pizza',
+                'Mini Enroladinho',
+                'Pastel de Forno de Bacalhau',
+                'Pastel de Forno de Camarão',
+                'Pastel de Forno de Carne',
+                'Pastel de Forno de Frango',
+                'Pastel de Forno de Queijo',
+                'Pastel de Forno de Pizza'
+            ],
+            'Salgados Vegetarianos': [
+                'Canudinho de Soja',
+                'Coxinha de Soja',
+                'Coxinha de Caju',
+                'Empadinha de Creme de Aborbinha',
+                'Empadinha de Falso Camarão',
+                'Pastel de Festa Vegetariano',
+                'Pastel de Forno Creme de Abobrinha',
+                'Pastel de Forno Caju'
+            ],
+            'Pratos Salgados': [
+                'Empadão de Bacalhau',
+                'Empadão de Carne',
+                'Empadão de Camarão',
+                'Empadão de Frango',
+                'Fricassê de Frango',
+                'Quiche de Camarão',
+                'Quiche de Frango',
+                'Rocambole de Bacalhau',
+                'Rocambole de Camarão',
+                'Rocambole de Carne',
+                'Rocambole de Frango',
+                'Salpicão de Frango',
+                'Torta Salgada de Bacalhau',
+                'Torta Salgada de Carne',
+                'Torta Salgada de Camarão',
+                'Torta Salgada de Frango'
+            ]
+        };
+
+        // Função auxiliar para buscar categoria de um item no catálogo
+        function buscarCategoriaNoCatalogo(nomeItem) {
+            // Remove quantidade e formatação do nome para busca
+            let nomeLimpo = nomeItem
+                .replace(/^\d+\s*un\.\s*-\s*/i, '') // Remove "X un. - "
+                .replace(/\s*-\s*\([^)]*\)\s*=?\s*/g, '') // Remove "- (qualquer coisa) ="
+                .replace(/\s*-\s*\([^)]*$/g, '') // Remove "- (" e tudo depois
+                .trim();
+            
+            // Busca o item no catálogo
+            for (const [categoria, produtos] of Object.entries(CATALOGO_PRODUTOS)) {
+                if (produtos.some(produto => {
+                    // Comparação case-insensitive e permite variações
+                    const produtoLower = produto.toLowerCase().trim();
+                    const nomeLower = nomeLimpo.toLowerCase().trim();
+                    return nomeLower.includes(produtoLower) || produtoLower.includes(nomeLower);
+                })) {
+                    return categoria;
+                }
+            }
+            return null;
+        }
 
         const STATUS_FLOW = [
             'Pedido Recebido',
@@ -897,7 +1341,67 @@
                     }
                 });
             }
+            
+            // Toggle de filtros no mobile
+            const filterToggleBtn = document.getElementById('filter-toggle-btn');
+            const filterBar = document.getElementById('filter-bar');
+            if (filterToggleBtn && filterBar) {
+                filterToggleBtn.addEventListener('click', () => {
+                    filterBar.classList.toggle('show');
+                });
+            }
+            
+            // Configura comportamento de acordeão para colunas no mobile
+            configurarAcordeaoColunas();
+            
+            // Reconfigura ao redimensionar a janela
+            let resizeTimer;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => {
+                    configurarAcordeaoColunas();
+                    // Se voltar para desktop, remove classe expanded de todas
+                    if (window.innerWidth > 768) {
+                        document.querySelectorAll('.kanban-column').forEach(col => {
+                            col.classList.remove('expanded');
+                        });
+                    }
+                }, 250);
+            });
+
         });
+        
+        // Função para configurar comportamento de acordeão nas colunas
+        function configurarAcordeaoColunas() {
+            // Remove listeners antigos para evitar duplicação
+            document.querySelectorAll('.column-header').forEach(header => {
+                const newHeader = header.cloneNode(true);
+                header.parentNode.replaceChild(newHeader, header);
+            });
+            
+            // Adiciona novos listeners
+            if (window.innerWidth <= 768) {
+                document.querySelectorAll('.column-header').forEach(header => {
+                    header.addEventListener('click', (e) => {
+                        // Não aciona se clicar no checkbox
+                        if (e.target.type === 'checkbox' || e.target.closest('.column-select-all-checkbox')) return;
+                        
+                        const column = header.closest('.kanban-column');
+                        if (!column) return;
+                        
+                        // Fecha todas as outras colunas
+                        document.querySelectorAll('.kanban-column').forEach(col => {
+                            if (col !== column) {
+                                col.classList.remove('expanded');
+                            }
+                        });
+                        
+                        // Toggle da coluna clicada
+                        column.classList.toggle('expanded');
+                    });
+                });
+            }
+        }
 
         function inicializarKanban() {
             const board = document.getElementById('kanban-board');
@@ -1035,8 +1539,8 @@
 
                 if (coluna) {
                     pedidosOrdenados.forEach(pedido => {
-                        const card = criarCardHTML(pedido);
-                        coluna.appendChild(card);
+                    const card = criarCardHTML(pedido);
+                    coluna.appendChild(card);
                         contadores[status]++;
                     });
                 }
@@ -1047,17 +1551,27 @@
                 if(col) col.querySelector('.count-badge').textContent = contadores[status];
             });
 
+            // No mobile, inicia todas as colunas fechadas
+            if (window.innerWidth <= 768) {
+                document.querySelectorAll('.kanban-column').forEach(col => {
+                    col.classList.remove('expanded');
+                });
+            }
+
+            // Reconfigura acordeão após renderização
+            configurarAcordeaoColunas();
+
             // Atualiza dashboard com lógica: selecionados OU período
             atualizarDashboard();
         }
 
         // Função para obter pedidos do mês vigente (usado apenas quando não há filtros)
         function obterPedidosDoMesAtual() {
-            const hoje = new Date();
-            const mesAtual = hoje.getMonth();
-            const anoAtual = hoje.getFullYear();
-            
-            return todosPedidos.filter(p => {
+                const hoje = new Date();
+                const mesAtual = hoje.getMonth();
+                const anoAtual = hoje.getFullYear();
+                
+                return todosPedidos.filter(p => {
                 const dataPed = parseDataBR(p.Data_Entrega);
                 if (!dataPed) return false;
                 
@@ -1226,7 +1740,7 @@
                 const statusLower = (status || '').toLowerCase();
                 
                 // Contagem: inclui todos os pedidos visíveis (incluindo cancelados)
-                totalPedidos++;
+                    totalPedidos++;
                 
                 // Valor financeiro: EXCLUI pedidos onde Status_do_Pedido contém "Cancelado" (case insensitive)
                 if (!statusLower.includes('cancelado')) {
@@ -1747,11 +2261,581 @@
             document.getElementById('edit-obs').value = pedido.Observacoes || '';
             document.getElementById('edit-resumo').value = pedido.Resumo_dos_Itens || '';
 
+            // Preenche o select de produtos
+            preencherSelectProdutos();
+
             document.getElementById('edit-modal').style.display = 'flex';
+        }
+
+        // Preenche o select com produtos do catálogo
+        function preencherSelectProdutos() {
+            const select = document.getElementById('add-produto-select');
+            select.innerHTML = '<option value="">Selecione um produto...</option>';
+            
+            // Adiciona "Outros" no topo (já está no HTML, mas garante que está presente)
+            const outrosOption = select.querySelector('option[value="__OUTROS__"]');
+            if (!outrosOption) {
+                const optionOutros = document.createElement('option');
+                optionOutros.value = '__OUTROS__';
+                optionOutros.textContent = '--- Outros ---';
+                select.appendChild(optionOutros);
+            }
+            
+            Object.keys(CATALOGO_PRECOS).sort().forEach(produto => {
+                const option = document.createElement('option');
+                option.value = produto;
+                option.textContent = produto;
+                select.appendChild(option);
+            });
+        }
+
+        // Função para mostrar/ocultar campos quando "Outros" é selecionado
+        function toggleCamposOutros() {
+            const produtoSelect = document.getElementById('add-produto-select');
+            const nomeOutrosContainer = document.getElementById('add-nome-outros-container');
+            const nomeOutrosInput = document.getElementById('add-nome-outros');
+            const precoInput = document.getElementById('add-preco');
+            
+            if (produtoSelect.value === '__OUTROS__') {
+                nomeOutrosContainer.style.display = 'block';
+                nomeOutrosInput.required = true;
+                precoInput.required = true;
+            } else {
+                nomeOutrosContainer.style.display = 'none';
+                nomeOutrosInput.required = false;
+                precoInput.required = false;
+                nomeOutrosInput.value = '';
+                
+                // Se não for "Outros", preenche o preço automaticamente
+                if (produtoSelect.value && CATALOGO_PRECOS[produtoSelect.value]) {
+                    const preco = CATALOGO_PRECOS[produtoSelect.value];
+                    precoInput.value = preco.toFixed(2).replace('.', ',');
+                } else {
+                    precoInput.value = '';
+                }
+            }
+        }
+
+        // Função para adicionar item ao resumo com cálculo de desconto e organização por categoria
+        function adicionarItemAoResumo() {
+            const produtoSelect = document.getElementById('add-produto-select');
+            const qtdInput = document.getElementById('add-qtd');
+            const precoInput = document.getElementById('add-preco');
+            const nomeOutrosInput = document.getElementById('add-nome-outros');
+            const resumoTextarea = document.getElementById('edit-resumo');
+            const totalInput = document.getElementById('edit-total');
+            const obsTextarea = document.getElementById('edit-obs');
+
+            const produtoSelecionado = produtoSelect.value;
+            const quantidade = parseInt(qtdInput.value) || 1;
+
+            if (!produtoSelecionado) {
+                showToast('Selecione um produto', true);
+                return;
+            }
+
+            if (quantidade < 1) {
+                showToast('Quantidade deve ser no mínimo 1', true);
+                return;
+            }
+
+            // Verifica se é "Outros"
+            let produtoNome = '';
+            let precoOriginal = 0;
+            let categoriaEncontrada = 'Outros';
+            
+            if (produtoSelecionado === '__OUTROS__') {
+                // Item "Outros"
+                produtoNome = nomeOutrosInput.value.trim();
+                
+                if (!produtoNome) {
+                    showToast('Informe o nome do item', true);
+                    return;
+                }
+                
+                const precoStr = precoInput.value.trim();
+                if (!precoStr) {
+                    showToast('Informe o preço do item', true);
+                    return;
+                }
+                
+                precoOriginal = parseFloat(precoStr.replace(',', '.')) || 0;
+                if (precoOriginal <= 0) {
+                    showToast('Preço deve ser maior que zero', true);
+                    return;
+                }
+            } else {
+                // Item do catálogo
+                produtoNome = produtoSelecionado;
+                precoOriginal = CATALOGO_PRECOS[produtoNome] || 0;
+            }
+            
+            // Preço editado pelo usuário
+            let precoEditado = parseFloat(precoInput.value.replace(',', '.')) || precoOriginal;
+            
+            // Se não foi preenchido e não é "Outros", usa o preço original
+            if (!precoInput.value || precoInput.value.trim() === '') {
+                if (produtoSelecionado !== '__OUTROS__') {
+                    precoEditado = precoOriginal;
+                }
+            }
+
+            // Calcula total do item
+            const totalItem = precoEditado * quantidade;
+
+            // Formata valores para exibição
+            const precoFormatado = precoEditado.toFixed(2).replace('.', ',');
+            const totalFormatado = totalItem.toFixed(2).replace('.', ',');
+
+            // Busca a categoria do produto no catálogo (apenas se não for "Outros")
+            if (produtoSelecionado !== '__OUTROS__') {
+                // Extrai o nome base do produto (remove tamanho)
+                let nomeBase = produtoNome;
+                // Remove padrões como " - P (1.5 KG)", " - M (2.5 KG)", etc.
+                nomeBase = nomeBase.replace(/\s*-\s*[PMG]\s*\([\d.]+ KG\)/i, '').trim();
+                
+                // Busca a categoria no CATALOGO_PRODUTOS
+                for (const [categoria, produtos] of Object.entries(CATALOGO_PRODUTOS)) {
+                    if (produtos.some(produto => {
+                        const produtoLower = produto.toLowerCase().trim();
+                        const nomeLower = nomeBase.toLowerCase().trim();
+                        return nomeLower.includes(produtoLower) || produtoLower.includes(nomeLower);
+                    })) {
+                        categoriaEncontrada = categoria;
+                        break;
+                    }
+                }
+            }
+
+            // Gera string do item no formato: Nome - Qtd un. (R$ Unitário) = R$ Total
+            const linhaItem = `${produtoNome} - ${quantidade} un. (R$ ${precoFormatado}) = R$ ${totalFormatado}`;
+
+            // Adiciona ao resumo organizado por categoria
+            let resumoAtual = resumoTextarea.value.trim();
+            let linhas = resumoAtual ? resumoTextarea.value.split('\n') : [];
+            
+            // Procura se a categoria já existe no resumo
+            let categoriaIndex = -1;
+            let proximaCategoriaIndex = linhas.length;
+            
+            for (let i = 0; i < linhas.length; i++) {
+                const linha = linhas[i].trim();
+                // Verifica se é uma linha de categoria (começa com "-" ou termina com ":")
+                if (linha.startsWith('-') && linha.toLowerCase().includes(categoriaEncontrada.toLowerCase())) {
+                    categoriaIndex = i;
+                    // Procura a próxima categoria ou fim do texto
+                    for (let j = i + 1; j < linhas.length; j++) {
+                        const proxLinha = linhas[j].trim();
+                        if (proxLinha.startsWith('-') && proxLinha.includes(':')) {
+                            proximaCategoriaIndex = j;
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+            
+            // Se encontrou a categoria, adiciona o item nela
+            if (categoriaIndex >= 0) {
+                // Insere o item após a linha da categoria, antes da próxima categoria
+                linhas.splice(proximaCategoriaIndex, 0, linhaItem);
+            } else {
+                // Se não encontrou, adiciona linha em branco, categoria e o item
+                const categoriaLinha = `- ${categoriaEncontrada}:`;
+                // Adiciona linha em branco antes da categoria se já houver conteúdo
+                if (linhas.length > 0 && linhas[linhas.length - 1].trim() !== '') {
+                    linhas.push('');
+                }
+                linhas.push(categoriaLinha);
+                linhas.push(linhaItem);
+            }
+            
+            resumoTextarea.value = linhas.join('\n');
+
+            // Atualiza o total do pedido
+            let totalAtual = 0;
+            const totalAtualStr = totalInput.value.trim();
+            if (totalAtualStr) {
+                totalAtual = parseFloat(totalAtualStr.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+            }
+            const novoTotal = totalAtual + totalItem;
+            totalInput.value = novoTotal.toFixed(2).replace('.', ',');
+
+            // Lógica de desconto (apenas para produtos do catálogo, não para "Outros")
+            if (produtoSelecionado !== '__OUTROS__' && precoOriginal > 0 && precoEditado < precoOriginal) {
+                const diferenca = (precoOriginal - precoEditado) * quantidade;
+                const descontoFormatado = diferenca.toFixed(2).replace('.', ',');
+
+                let obsAtual = obsTextarea.value.trim();
+                
+                // Procura por "Desconto de R$" no texto
+                const regexDesconto = /Desconto de R\$\s*([\d.,]+)/i;
+                const match = obsAtual.match(regexDesconto);
+
+                if (match) {
+                    // Já existe desconto, soma o novo valor
+                    const descontoAtual = parseFloat(match[1].replace(',', '.')) || 0;
+                    const novoDescontoTotal = descontoAtual + diferenca;
+                    const novoDescontoFormatado = novoDescontoTotal.toFixed(2).replace('.', ',');
+                    
+                    obsAtual = obsAtual.replace(regexDesconto, `Desconto de R$ ${novoDescontoFormatado}`);
+                } else {
+                    // Não existe desconto, adiciona novo
+                    const novaLinhaDesconto = obsAtual ? `\nDesconto de R$ ${descontoFormatado}` : `Desconto de R$ ${descontoFormatado}`;
+                    obsAtual = obsAtual + novaLinhaDesconto;
+                }
+
+                obsTextarea.value = obsAtual;
+            }
+
+            // Limpa os campos
+            produtoSelect.value = '';
+            qtdInput.value = '1';
+            precoInput.value = '';
+            nomeOutrosInput.value = '';
+            document.getElementById('add-nome-outros-container').style.display = 'none';
+
+            showToast('Item adicionado com sucesso!');
         }
 
         function fecharModal() {
             document.getElementById('edit-modal').style.display = 'none';
+        }
+
+        // ============================================================================
+        // FUNCIONALIDADE DE ADICIONAR ITENS
+        // ============================================================================
+        
+        // Lista de itens disponíveis organizados por categoria
+        const ITENS_DISPONIVEIS = {
+            'Bolos Especiais': [
+                { nome: 'Cheesecake tradicional', valor: 0 },
+                { nome: 'Bolo Red velvet', valor: 0 },
+                { nome: 'Bolo de Chocolate', valor: 0 }
+            ],
+            'Bolos Tradicionais': [
+                { nome: 'Bolo de Limão e Chocolate Branco', valor: 0 },
+                { nome: 'Bolo de Chocolate', valor: 0 },
+                { nome: 'Bolo de Cenoura', valor: 0 }
+            ],
+            'Doces': [
+                { nome: 'Bem-casado', valor: 0 },
+                { nome: 'Ouriço', valor: 0 },
+                { nome: 'Brigadeiro', valor: 0 }
+            ],
+            'Pratos Salgados': [
+                { nome: 'Empadão de Camarão', valor: 0 },
+                { nome: 'Quiche de Frango', valor: 0 },
+                { nome: 'Torta Salgada', valor: 0 }
+            ],
+            'Salgados Assados': [
+                { nome: 'Empadinha de Frango', valor: 0 },
+                { nome: 'Coxinha Assada', valor: 0 }
+            ],
+            'Salgados Fritos': [
+                { nome: 'Bolinho de Charque', valor: 0 },
+                { nome: 'Coxinha de Frango', valor: 0 },
+                { nome: 'Pastel de Festa', valor: 0 }
+            ]
+        };
+
+        let itensSelecionados = []; // Array de { categoria, nome, quantidade, valorUnitario, valorTotal }
+
+        function abrirModalAdicionarItens() {
+            itensSelecionados = [];
+            renderizarItensDisponiveis();
+            atualizarResumoSelecionados();
+            document.getElementById('adicionar-itens-modal').style.display = 'flex';
+        }
+
+        function fecharModalAdicionarItens() {
+            document.getElementById('adicionar-itens-modal').style.display = 'none';
+            // Limpa campos "Outros"
+            document.getElementById('outros-item-nome').value = '';
+            document.getElementById('outros-item-valor').value = '';
+            document.getElementById('outros-item-quantidade').value = '1';
+        }
+
+        function renderizarItensDisponiveis() {
+            const container = document.getElementById('itens-lista');
+            container.innerHTML = '';
+
+            Object.keys(ITENS_DISPONIVEIS).forEach(categoria => {
+                const categoriaDiv = document.createElement('div');
+                categoriaDiv.style.border = '1px solid #ddd';
+                categoriaDiv.style.borderRadius = '8px';
+                categoriaDiv.style.padding = '10px';
+                categoriaDiv.style.backgroundColor = '#fff';
+
+                const categoriaTitle = document.createElement('h4');
+                categoriaTitle.textContent = categoria;
+                categoriaTitle.style.margin = '0 0 10px 0';
+                categoriaTitle.style.fontSize = '0.95em';
+                categoriaTitle.style.color = 'var(--cor-texto)';
+                categoriaDiv.appendChild(categoriaTitle);
+
+                ITENS_DISPONIVEIS[categoria].forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'item-disponivel-row';
+                    itemDiv.style.display = 'flex';
+                    itemDiv.style.gap = '10px';
+                    itemDiv.style.alignItems = 'center';
+                    itemDiv.style.marginBottom = '8px';
+
+                    const nomeSpan = document.createElement('span');
+                    nomeSpan.textContent = item.nome;
+                    nomeSpan.className = 'item-nome';
+                    nomeSpan.style.flex = '2';
+                    nomeSpan.style.fontSize = '0.9em';
+                    itemDiv.appendChild(nomeSpan);
+
+                    const valorInput = document.createElement('input');
+                    valorInput.type = 'number';
+                    valorInput.placeholder = 'Valor (R$)';
+                    valorInput.step = '0.01';
+                    valorInput.min = '0';
+                    valorInput.className = 'item-valor-input';
+                    valorInput.style.flex = '1';
+                    valorInput.style.padding = '6px';
+                    valorInput.style.border = '1px solid #5a9bd4';
+                    valorInput.style.borderRadius = '6px';
+                    valorInput.dataset.categoria = categoria;
+                    valorInput.dataset.nome = item.nome;
+                    itemDiv.appendChild(valorInput);
+
+                    const qtdInput = document.createElement('input');
+                    qtdInput.type = 'number';
+                    qtdInput.placeholder = 'Qtd';
+                    qtdInput.min = '1';
+                    qtdInput.value = '1';
+                    qtdInput.className = 'item-qtd-input';
+                    qtdInput.style.width = '60px';
+                    qtdInput.style.padding = '6px';
+                    qtdInput.style.border = '1px solid #5a9bd4';
+                    qtdInput.style.borderRadius = '6px';
+                    qtdInput.dataset.categoria = categoria;
+                    qtdInput.dataset.nome = item.nome;
+                    itemDiv.appendChild(qtdInput);
+
+                    const addBtn = document.createElement('button');
+                    addBtn.textContent = '+';
+                    addBtn.className = 'btn-save item-add-btn';
+                    addBtn.style.padding = '6px 12px';
+                    addBtn.style.fontSize = '0.85em';
+                    addBtn.onclick = () => adicionarItemLista(categoria, item.nome, valorInput.value, qtdInput.value);
+                    itemDiv.appendChild(addBtn);
+
+                    categoriaDiv.appendChild(itemDiv);
+                });
+
+                container.appendChild(categoriaDiv);
+            });
+        }
+
+        function adicionarItemLista(categoria, nome, valorStr, quantidadeStr) {
+            const valor = parseFloat(valorStr) || 0;
+            const quantidade = parseInt(quantidadeStr) || 1;
+
+            if (quantidade < 1) {
+                showToast('Quantidade mínima é 1 unidade', true);
+                return;
+            }
+
+            if (valor <= 0) {
+                showToast('Informe o valor do item', true);
+                return;
+            }
+
+            const valorTotal = valor * quantidade;
+            const itemKey = `${categoria}-${nome}`;
+
+            // Verifica se já existe, se sim, atualiza
+            const index = itensSelecionados.findIndex(i => i.key === itemKey);
+            if (index >= 0) {
+                itensSelecionados[index].quantidade += quantidade;
+                itensSelecionados[index].valorTotal = itensSelecionados[index].valorUnitario * itensSelecionados[index].quantidade;
+            } else {
+                itensSelecionados.push({
+                    key: itemKey,
+                    categoria: categoria,
+                    nome: nome,
+                    quantidade: quantidade,
+                    valorUnitario: valor,
+                    valorTotal: valorTotal
+                });
+            }
+
+            atualizarResumoSelecionados();
+            showToast('Item adicionado!');
+        }
+
+        function adicionarItemOutros() {
+            const nome = document.getElementById('outros-item-nome').value.trim();
+            const valorStr = document.getElementById('outros-item-valor').value;
+            const quantidadeStr = document.getElementById('outros-item-quantidade').value;
+
+            if (!nome) {
+                showToast('Informe o nome do item', true);
+                return;
+            }
+
+            const valor = parseFloat(valorStr) || 0;
+            const quantidade = parseInt(quantidadeStr) || 1;
+
+            if (quantidade < 1) {
+                showToast('Quantidade mínima é 1 unidade', true);
+                return;
+            }
+
+            if (valor <= 0) {
+                showToast('Informe o valor do item', true);
+                return;
+            }
+
+            const valorTotal = valor * quantidade;
+            const itemKey = `Outros-${nome}`;
+
+            // Verifica se já existe, se sim, atualiza
+            const index = itensSelecionados.findIndex(i => i.key === itemKey);
+            if (index >= 0) {
+                itensSelecionados[index].quantidade += quantidade;
+                itensSelecionados[index].valorTotal = itensSelecionados[index].valorUnitario * itensSelecionados[index].quantidade;
+            } else {
+                itensSelecionados.push({
+                    key: itemKey,
+                    categoria: 'Outros',
+                    nome: nome,
+                    quantidade: quantidade,
+                    valorUnitario: valor,
+                    valorTotal: valorTotal
+                });
+            }
+
+            // Limpa campos
+            document.getElementById('outros-item-nome').value = '';
+            document.getElementById('outros-item-valor').value = '';
+            document.getElementById('outros-item-quantidade').value = '1';
+
+            atualizarResumoSelecionados();
+            showToast('Item adicionado!');
+        }
+
+        function atualizarResumoSelecionados() {
+            const container = document.getElementById('itens-selecionados-resumo');
+            const lista = document.getElementById('itens-selecionados-lista');
+            const totalSpan = document.getElementById('total-itens-selecionados');
+
+            if (itensSelecionados.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'block';
+            lista.innerHTML = '';
+
+            let totalGeral = 0;
+
+            // Agrupa por categoria
+            const itensPorCategoria = {};
+            itensSelecionados.forEach(item => {
+                if (!itensPorCategoria[item.categoria]) {
+                    itensPorCategoria[item.categoria] = [];
+                }
+                itensPorCategoria[item.categoria].push(item);
+            });
+
+            Object.keys(itensPorCategoria).forEach(categoria => {
+                const categoriaDiv = document.createElement('div');
+                categoriaDiv.style.marginBottom = '10px';
+
+                const categoriaTitle = document.createElement('strong');
+                categoriaTitle.textContent = `- ${categoria}:`;
+                categoriaTitle.style.display = 'block';
+                categoriaTitle.style.marginBottom = '5px';
+                categoriaDiv.appendChild(categoriaTitle);
+
+                itensPorCategoria[categoria].forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.style.fontSize = '0.9em';
+                    itemDiv.style.marginLeft = '10px';
+                    itemDiv.style.marginBottom = '3px';
+                    itemDiv.innerHTML = `${item.quantidade} un. - ${item.nome} (R$ ${item.valorUnitario.toFixed(2).replace('.', ',')} cada) = R$ ${item.valorTotal.toFixed(2).replace('.', ',')}`;
+                    
+                    const removeBtn = document.createElement('button');
+                    removeBtn.textContent = '×';
+                    removeBtn.style.marginLeft = '10px';
+                    removeBtn.style.padding = '2px 6px';
+                    removeBtn.style.background = '#f44336';
+                    removeBtn.style.color = 'white';
+                    removeBtn.style.border = 'none';
+                    removeBtn.style.borderRadius = '4px';
+                    removeBtn.style.cursor = 'pointer';
+                    removeBtn.onclick = () => {
+                        const index = itensSelecionados.findIndex(i => i.key === item.key);
+                        if (index >= 0) {
+                            itensSelecionados.splice(index, 1);
+                            atualizarResumoSelecionados();
+                        }
+                    };
+                    itemDiv.appendChild(removeBtn);
+                    categoriaDiv.appendChild(itemDiv);
+
+                    totalGeral += item.valorTotal;
+                });
+
+                lista.appendChild(categoriaDiv);
+            });
+
+            totalSpan.textContent = totalGeral.toFixed(2).replace('.', ',');
+        }
+
+        function confirmarAdicionarItens() {
+            if (itensSelecionados.length === 0) {
+                showToast('Selecione pelo menos um item', true);
+                return;
+            }
+
+            const resumoAtual = document.getElementById('edit-resumo').value;
+            const totalAtualStr = document.getElementById('edit-total').value;
+            
+            // Calcula novo total
+            let totalAtual = 0;
+            if (totalAtualStr) {
+                totalAtual = parseFloat(totalAtualStr.replace(',', '.')) || 0;
+            }
+            
+            let totalNovosItens = 0;
+            itensSelecionados.forEach(item => {
+                totalNovosItens += item.valorTotal;
+            });
+
+            const novoTotal = totalAtual + totalNovosItens;
+
+            // Adiciona itens ao resumo
+            let novoResumo = resumoAtual ? resumoAtual + '\n' : '';
+            
+            // Agrupa por categoria
+            const itensPorCategoria = {};
+            itensSelecionados.forEach(item => {
+                if (!itensPorCategoria[item.categoria]) {
+                    itensPorCategoria[item.categoria] = [];
+                }
+                itensPorCategoria[item.categoria].push(item);
+            });
+
+            Object.keys(itensPorCategoria).forEach(categoria => {
+                novoResumo += `- ${categoria}:\n`;
+                itensPorCategoria[categoria].forEach(item => {
+                    novoResumo += `${item.quantidade} un. - ${item.nome}\n`;
+                });
+            });
+
+            // Atualiza campos
+            document.getElementById('edit-resumo').value = novoResumo;
+            document.getElementById('edit-total').value = novoTotal.toFixed(2).replace('.', ',');
+
+            showToast('Itens adicionados com sucesso!');
+            fecharModalAdicionarItens();
         }
 
         document.getElementById('edit-form').addEventListener('submit', async (e) => {
@@ -2071,7 +3155,7 @@
                     
                     if (temQuantidade || temValorMonetario || temPadraoItem || temSeta) {
                         // Remove "⤷" se presente
-                        let itemTexto = linhaTrim.replace(/.*⤷\s*/, '').trim();
+                    let itemTexto = linhaTrim.replace(/.*⤷\s*/, '').trim();
                         
                         // Extrai quantidade usando Regex (dígitos antes de "un", "un.", "unidades")
                         const quantidadeMatch = itemTexto.match(/(\d+)\s*(un\.|unidades|un)\b/i);
@@ -2082,7 +3166,7 @@
                         }
                         
                         // Normaliza o formato do item para "X un. - Nome do Produto"
-                        if (!itemTexto.match(/^\d+\s*un\.\s*-/)) {
+                    if (!itemTexto.match(/^\d+\s*un\.\s*-/)) {
                             // Remove a quantidade existente para reformatar
                             itemTexto = itemTexto.replace(/\d+\s*(un\.|unidades|un)\s*/gi, '').trim();
                             // Remove "R$" e valores monetários do final
@@ -2095,9 +3179,23 @@
                             }
                         }
                         
-                        // Lógica "Outros": Se item detectado mas categoriaAtual está vazia, atribui "Outros"
+                        // Lógica de categorização inteligente:
+                        // 1. Se já tem categoria detectada no texto, usa ela
+                        // 2. Se não tem categoria, busca no catálogo
+                        // 3. Se não encontrar no catálogo, usa "Outros"
                         if (itemTexto) {
-                            const categoriaParaUsar = categoriaAtual || 'Outros';
+                            let categoriaParaUsar = categoriaAtual;
+                            
+                            // Se não há categoria detectada, busca no catálogo
+                            if (!categoriaParaUsar) {
+                                categoriaParaUsar = buscarCategoriaNoCatalogo(itemTexto);
+                            }
+                            
+                            // Se ainda não encontrou, usa "Outros"
+                            if (!categoriaParaUsar) {
+                                categoriaParaUsar = 'Outros';
+                            }
+                            
                             itens.push({ categoria: categoriaParaUsar, item: itemTexto, quantidade: quantidade });
                         }
                     }

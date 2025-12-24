@@ -980,7 +980,7 @@
         // ============================================================================
         // CONFIGURAÇÃO
         // ============================================================================
-        const API_URL = "https://script.google.com/macros/s/AKfycbxCz6Fj_3vIp0DHUsf9m7zYi3fjGx_zNqsXY4-nvXJwuZbkV7Pw1PTBDTngrV-AP9Y0/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbxg41fkz_lDRKUTcnukG-LmuasWR_W6C7QovJo7Vdll58snz9MknU9f5QZ2KWKOOSA/exec";
 
         // ============================================================================
         // CATÁLOGO DE PRODUTOS
@@ -2298,12 +2298,8 @@
             
             if (produtoSelect.value === '__OUTROS__') {
                 nomeOutrosContainer.style.display = 'block';
-                nomeOutrosInput.required = true;
-                precoInput.required = true;
             } else {
                 nomeOutrosContainer.style.display = 'none';
-                nomeOutrosInput.required = false;
-                precoInput.required = false;
                 nomeOutrosInput.value = '';
                 
                 // Se não for "Outros", preenche o preço automaticamente
@@ -2493,7 +2489,9 @@
             qtdInput.value = '1';
             precoInput.value = '';
             nomeOutrosInput.value = '';
-            document.getElementById('add-nome-outros-container').style.display = 'none';
+            
+            // Reseta a interface gráfica para o estado inicial
+            toggleCamposOutros();
 
             showToast('Item adicionado com sucesso!');
         }
@@ -3077,15 +3075,28 @@
 
         function extrairDescontoCupom(cupomTexto) {
             if (!cupomTexto) return null;
+            
+            const textoUpper = cupomTexto.toUpperCase();
+
+            // 1. Verifica se tem porcentagem explícita (ex: "10%")
             const percentMatch = cupomTexto.match(/(\d+(?:[.,]\d+)?)%/);
             if (percentMatch) {
                 return { tipo: 'percentual', valor: parseFloat(percentMatch[1].replace(',', '.')) };
             }
-            const valorMatch = cupomTexto.match(/(?:R\$\s*)?(\d+(?:[.,]\d+)?)/);
+
+            // 2. Verifica se é um código FAVU... (Regra específica: 10% de desconto)
+            // Isso evita que ele pegue os números do código como valor monetário
+            if (textoUpper.includes('FAVU') || textoUpper.includes('COOKIES10')) {
+                return { tipo: 'percentual', valor: 10 };
+            }
+
+            // 3. Verifica valor fixo (R$ OBRIGATÓRIO agora, para não confundir com o código)
+            const valorMatch = cupomTexto.match(/R\$\s*(\d+(?:[.,]\d+)?)/i);
             if (valorMatch) {
                 let valor = valorMatch[1].replace(',', '.');
                 return { tipo: 'fixo', valor: parseFloat(valor) };
             }
+
             return null;
         }
 
